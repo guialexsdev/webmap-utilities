@@ -20,7 +20,7 @@ Here is a list of features we provide:
 ## Requirements and dependencies
 
 - Minimum QGis version 3.28
-- You need to install QuickOSM
+- You need to install QuickOSM plugin
 
 ## Installing
 
