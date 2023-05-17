@@ -26,6 +26,10 @@ Here is a list of features we provide:
 
 In QGis, install Webmap Utilities through the menu **Plugins -> Manage and Install Plugins**. Search for 'Webmap Utilities' and install. It may be necessary, in the Settings tab in the plugin manager, to check the option **Show also Experimental Plugins**.
 
+Acesse as ferramentas do plugin clicando com o botão direito do mouse em qualquer lugar na barra de ferramentas e selecionando **Webmap Utilities Toolbar**
+
+![](/images/toolbar.png)
+
 ## Quick Tutorial
 
 We built a tagging system to make it easy to replicate a map. Let's say you've made a map of a certain region and you like the result. To replicate this idea of ​​a map for another region, using Webmap Utilities it would take just a few clicks to: 
@@ -55,6 +59,8 @@ The next step is to insert some properties to the created tag. There are some pr
 To add a property to the tag, go to ![](/images/settings.png) **Settings** -> Tags  and right-click on the tag name. Click **Add Property...**. Select `_zoom_min`, enter the number 9 and click OK. Repeat the process for the `_zoom_max` property, but choosing the number 15, for example. That is, the features of our 'villages' tagged layers will only be visible between levels 9 and 15 of zoom. At this time, the property is not yet taking effect. For that we need the next step. Let's go!
 
 ![Add property to a tag](/images/step_add_property.png)
+
+You can create your own properties. Just go to ![](/images/settings.png) **Settings** and open the **Properties** tab.
 
 **Other useful properties**
 
@@ -121,3 +127,12 @@ Our shaded relief tool creates two layers, in the order they need to be: one abo
 In addition, both layers receive the Aerial Perspective effect: the higher the layer, the greater the contrast. This is good for cartography because usually the lower portions of a region are where cities, highways etc are located... less contrast, easier to recognize all these elements. Here is a good article about Aerial Perspective: http://www.reliefshading.com/design/aerial-perspective/.
 
 Click on ![](/images/relief_creator.png) button to generate a Shaded Relief.
+
+### Other features
+
+* Instead of using the scale selector, the one at the bottom of the main window, you can use the zoom level selector, which is next to the icons on our toolbar.
+* There are two ways for add and edit tags. You access the option ![](/images/settings.png) **Settings** and then choose the Tag or Properties tab; or you can right-click on any tagged layer and choose **Set tag property...** option.
+* You can create your own properties. In ![](/images/settings.png) **Settings**, just open the **Properties** tab and register a new property. After that, it will be available for use in the **Tags** tab.
+* To replicate the same settings, tags and properties in another project you can:
+   - Export and Import configurations (there are options for this in ![](/images/settings.png) **Settings**)
+   - Or create a Template Project in Qgis (and nothing else, as all settings are saved in the project)
