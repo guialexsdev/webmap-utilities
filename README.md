@@ -1,6 +1,6 @@
-#Webmap Utilities - A QGis plugin for webmap building
+# Webmap Utilities - A QGis plugin for webmap building
 
-##What it does?
+## What it does?
 
 The Webmap Utilities plugin offers tools to facilitate the construction of webmaps, that is, dynamic maps whose content varies according to the scale.
 
@@ -17,10 +17,9 @@ Here is a list of features we provide:
   - Apply styles (QML files) to all tagged layers (raster or vector).
   - Download OSM data of all tagged vector layers.
 
-##Quick Tutorial
+## Quick Tutorial
 
-
-###Adding a tag
+### Adding a tag
 
 The tagging system is simple. First you define the category of each layers. For example, we might have multiple layers, perhaps from different sources, containing the villages in a given region. While all of these layers might have different names, they could all be categorized as 'village', as they will likely share several settings (style settings, for example).
 
@@ -32,7 +31,7 @@ The second step is to plan how the marked layers will be recognized. Currently, 
 
 Now just go to the plugin's **Settings** option and register the tag. Don't forget to select the tag identification mode at the bottom of the screen.
 
-###Adding a property to a tag
+### Adding a property to a tag
 
 The next step is to insert some properties for the created tag. There are some predefined ones (but you can create your own too). Let's use, for example, the **_zoom_min** and **_zoom_max** properties. Together they control the range of scale, or rather zoom levels, at which a feature or all of them will be visible.
 
@@ -40,7 +39,7 @@ To add a property to the tag, go to the Settings -> Tags screen and right-click 
 
 At this time, the property is not yet taking effect. For that we need the next step. Let's go!
 
-###Controlling a vector layer
+### Controlling a vector layer
 
 Open Layer Properties. Let's work with the labels, for example. Define a basic style that you like. In the **Rendering** section, go to **Show Label** and click on **Edit** to open the Expressions screen.
 
@@ -65,20 +64,20 @@ Explaining the arguments:
 - 3thd parameter: Minimum percentile (5%)
 - 4th parameter: Percentile increment at each zoom level (10%).
 
-###Other useful properties
+### Other useful properties
 
 - **_style**: add this property to your tag and choose a style file (QML). Every time you click the {X} icon, the style will be applied to the selected layer.
 - **_osm_key**: Used to automatically download OSM data when clicking the {Y} icon. It's the key to research. Ex: place, highway, waterway etc. Need to exist alongside the other OSM properties
 - **_osm_value**: Used to automatically download OSM data when clicking the {Y} icon. Is the value of the chosen key. Ex: town, primary_roads, river etc. Need to exist alongside the other OSM properties
 - **_osm_type**: Type of layer to be downloaded from OSM. Options: points, lines, multilines to multipolygons. Need to exist alongside the other OSM properties.
 
-###Rearrange layers
+### Rearrange layers
 
 When you are done with the structure of your map layers, go to Settings -> Structure, click on Update and then Apply. The organization of the layers will then be recorded.
 
 Every time you click on the {Z} icon, your project's layers will be reorganized (and groups created if necessary).
 
-###Generating Shaded Relief
+### Generating Shaded Relief
 
 Our shaded relief tool, or hillshade, creates two layers, to be placed one above the other. It works like this because each layer uses a light source with a different azimuth. This brings more detail to the final shaded relief.
 
