@@ -42,6 +42,10 @@ class SettingsPropertiesPageWidget(QtWidgets.QWidget, FORM_CLASS):
         self.propertiesTableWidget.clearSelection()
         self.helpBrowser.clear()
 
+        self.propertiesTableWidget.setHorizontalHeaderItem(0, QTableWidgetItem('Name'))
+        self.propertiesTableWidget.setHorizontalHeaderItem(1, QTableWidgetItem('Type'))
+        self.propertiesTableWidget.setHorizontalHeaderItem(2, QTableWidgetItem('Is list?'))
+
         row = self.propertiesTableWidget.rowCount()
 
         for propertyName in self.settingsManager.settings.properties:

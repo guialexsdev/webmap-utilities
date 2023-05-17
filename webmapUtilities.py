@@ -188,25 +188,25 @@ class WebmapUtilities:
 
         self.addButtonToCustomToolbar(
             'Settings',
-            ':/icons/settings2.png',
+            ':/icons/settings.png',
             self.runSettingsDialog
         )
 
         self.addButtonToCustomToolbar(
             'Apply Style',
-            ':/icons/apply_style2.png',
+            ':/icons/apply_style.png',
             self.runApplyStyleDialog
         )
 
         self.addButtonToCustomToolbar(
             'Apply Structure',
-            ':/icons/apply_structure2.png',
+            ':/icons/apply_structure.png',
             self.runApplyStructure
         )
         
         self.addButtonToCustomToolbar(
             'OSM Downloader',
-            ':/icons/osm3.png',
+            ':/icons/osm.png',
             self.runOSMDownloader
         )
 

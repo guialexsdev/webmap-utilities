@@ -1,12 +1,11 @@
 <RCC>
     <qresource>
-        <file>./icons/settings2.png</file>
-        <file>./icons/visibility2.png</file>
-        <file>./icons/apply_style2.png</file>
-        <file>./icons/apply_structure2.png</file>
-        <file>./icons/save_structure2.png</file>
+        <file>./icons/settings.png</file>
+        <file>./icons/apply_style.png</file>
+        <file>./icons/apply_structure.png</file>
+        <file>./icons/save_structure.png</file>
         <file>./icons/symbologyRemove.png</file>
-        <file>./icons/osm3.png</file>
+        <file>./icons/osm.png</file>
         <file>./icons/relief_creator.png</file>
     </qresource>
 </RCC>

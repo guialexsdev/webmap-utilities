@@ -1,3 +1,5 @@
+import re
+
 class Variable:
     TEMP_PREFIX = 'webmap_temp_'
     

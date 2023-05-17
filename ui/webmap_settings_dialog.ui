@@ -202,7 +202,7 @@ color: rgb(50,50,50);
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../icons/icons8-etiquetas-80.png</normaloff>../icons/icons8-etiquetas-80.png</iconset>
+        <normaloff>../icons/tag.png</normaloff>../icons/tag.png</iconset>
       </property>
      </item>
      <item>
@@ -211,7 +211,7 @@ color: rgb(50,50,50);
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../icons/icons8-bracket-96.png</normaloff>../icons/icons8-bracket-96.png</iconset>
+        <normaloff>../icons/brackets.png</normaloff>../icons/brackets.png</iconset>
       </property>
      </item>
      <item>
@@ -220,7 +220,7 @@ color: rgb(50,50,50);
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../icons/save_structure2.png</normaloff>../icons/save_structure2.png</iconset>
+        <normaloff>../icons/save_structure.png</normaloff>../icons/save_structure.png</iconset>
       </property>
      </item>
     </widget>
