@@ -28,6 +28,8 @@ No QGis, instale o Webmap Utilities através do menu **Plugins -> Manage and Ins
 
 Para acessar as ferramentas, clique com o botão direito em qualquer área livre da barra de ferramentas (barra de ícones) e marque **Webmap Utilities Toolbar**.
 
+![](/images/toolbar.png)
+
 ## Breve Tutorial
 
 O sistema de marcação facilita a replicação e a padronização de mapas. Digamos que você tenha construído um mapa de determinada região e tenha gostado do resultado. Para replicar esse mapa, mas para outra região, apenas alguns clicks seriam necessários para:
