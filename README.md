@@ -31,7 +31,7 @@ Next we need to plan how the tagged layers will be recognized by the plugin. Cur
 
 Now go to the plugin's ![](/images/settings.png) **Settings**  and register the tag with button ![](/images/symbologyAdd.png) **Add new tag...**. Don't forget to select the tag identification mode at the bottom of the screen.
 
-(![Settings: add new tag clicking the + icon and choose identification mode at the bottom os the screen.](/images/step_adding_tag.png))
+![Settings: add new tag clicking the + icon and choose identification mode at the bottom os the screen.](/images/step_adding_tag.png)
 
 ### Adding a property to a tag
 
@@ -39,7 +39,7 @@ The next step is to insert some properties to the created tag. There are some pr
 
 To add a property to the tag, go to ![](/images/settings.png) **Settings** -> Tags  and right-click on the tag name. Click **Add Property...**. Select `_zoom_min`, enter the number 9 and click OK. Repeat the process for the `_zoom_max` property, but choosing the number 15, for example. That is, the features of our 'villages' tagged layers will only be visible between levels 9 and 15 of zoom. At this time, the property is not yet taking effect. For that we need the next step. Let's go!
 
-(![Add property to a tag](/images/step_add_property.png))
+![Add property to a tag](/images/step_add_property.png)
 
 **Other useful properties**
 
@@ -52,7 +52,7 @@ To add a property to the tag, go to ![](/images/settings.png) **Settings** -> Ta
 
 Open Layer Properties. Let's work with the labels, for example. First, define a basic style that you like. Then in **Rendering** section, go to **Show Label**, **Data defined override** and click on **Edit** option to open the Expressions screen.
 
-(![Apply Data defined override to a label visibility](/images/step_controlling_layer1.png))
+![Apply Data defined override to a label visibility](/images/step_controlling_layer1.png)
 
 Let's insert one of the control functions provided by the plugin. All these functions are under 'Webmap - General' and 'Webmap - Visibility'.
 
