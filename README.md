@@ -19,6 +19,12 @@ Here is a list of features we provide:
 
 ## Quick Tutorial
 
+We built a tagging system to make it easy to replicate a map. Let's say you've made a map of a certain region and you like the result. To replicate this idea of ​​a map for another region, using Webmap Utilities it would take just a few clicks to: 
+
+- Automatically download the OSM layers
+- Automatically apply styles to all layers, vector or raster
+- Automatically organize the layer tree, in the right order
+
 ### Adding a tag
 
 The tagging system is simple. First you define the category - tha Tag - of each layer. For example, we might have multiple layers, perhaps from different sources, containing the villages in a given region. While all of these layers might have different names, they could all be categorized as 'village', as they will likely share several settings (styling options, for example). So, our tag for our village vector layers is simple **village**.
@@ -43,7 +49,7 @@ To add a property to the tag, go to ![](/images/settings.png) **Settings** -> Ta
 
 **Other useful properties**
 
-- `_style`: add this property to your tag and choose a style file (QML). 
+- `_style`: add this property to your tag and choose a style file (QML). Go to [Automatically applying styles](#automatically-applying-styles) to understand.
 - `_osm_key`: OSM key. Ex: place, highway, waterway etc. Need to exist alongside the other OSM properties
 - `_osm_value`: Together with `_osm_key`, they form a 'query' to fetch OSM data. Ex: town, primary_roads, river etc. Need to exist alongside the other OSM properties
 - `_osm_type`: Type of layer to be downloaded from OSM. Options: points, lines, multilines to multipolygons. Need to exist alongside the other OSM properties.
@@ -85,7 +91,19 @@ Every time you click the ![](/images/apply_style.png) icon, a style will be appl
 
 ### Structure: rearranging layers
 
-When you are done with the structure (arrangement) of your map layers, go to Settings -> Structure, click on Update and then Apply. The organization of the layers will then be recorded. Every time you click on the ![](/images/apply_structure.png) icon, your project's layers will be reorganized (and groups created if necessary).
+When you are done with the structure (arrangement) of your map layers, go to Settings -> Structure, click on Update and then Apply. The organization of the tagged layers will then be recorded. Every time you click on the ![](/images/apply_structure.png) icon, your project's layers (only the tagged ones) will be reorganized (and groups created if necessary).
+
+### Downloading vector layers from OSM
+
+You can add OSM properties to your tags so that the plugin automatically downloads vector layers. For this, use the following properties: `_osm_key`, `_osm_values` and `_osm_type`. In the case of the _osm_values ​​property, you can choose more than one value. 
+
+For example, a possible configuration to download roads it would be:
+
+- `_osm_key` = highway
+- `_osm_values` ​​= [primary, secondary, tertiary]
+- `_osm_type` = lines
+
+To download all layers of all tags, just click on the ![](/images/osm.png) icon and select the CRS and extent. Keep in mind that all mentioned properties need to be added to the tag.
 
 ### Generating Shaded Relief
 
