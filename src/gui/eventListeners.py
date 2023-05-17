@@ -1,9 +1,8 @@
 import math
-from qgis.core import QgsProject, NULL, QgsExpressionContextUtils, QgsMessageLog
+from qgis.core import QgsProject, NULL, QgsExpressionContextUtils
 from qgis.PyQt.QtWidgets import QMenu
 from ..gui.setLayerVisibilityContextMenuHandler import SetLayerVisibilityContextMenuHandler
 from ..gui.setPropertyContextMenuHandler import SetPropertyContextMenuHandler
-from ..gui.settingsAddPropertyToTag import SettingAddPropertyToTag
 from ..database.settingsManager import SettingsManager
 from ..utils.webmapCommons import Utils
 from ..model.variable import Variable

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>708</width>
-    <height>595</height>
+    <width>539</width>
+    <height>782</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,7 +24,7 @@
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer_2">
+      <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -68,12 +68,15 @@
    </item>
    <item>
     <widget class="QTableWidget" name="propertiesTableWidget">
-     <property name="selectionMode">
-      <enum>QAbstractItemView::SingleSelection</enum>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>500</height>
+      </size>
      </property>
-     <attribute name="horizontalHeaderCascadingSectionResizes">
-      <bool>false</bool>
-     </attribute>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
      <attribute name="horizontalHeaderStretchLastSection">
       <bool>true</bool>
      </attribute>
@@ -84,19 +87,24 @@
      </column>
      <column>
       <property name="text">
-       <string>Description</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
        <string>Type</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>List</string>
+       <string>Is List?</string>
       </property>
      </column>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextBrowser" name="helpBrowser">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>100</height>
+      </size>
+     </property>
     </widget>
    </item>
   </layout>

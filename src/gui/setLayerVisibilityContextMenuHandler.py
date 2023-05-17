@@ -1,8 +1,7 @@
-from qgis.core import QgsMessageLog, QgsMapLayer, QgsProject
+from qgis.core import QgsMapLayer, QgsProject
 from qgis.PyQt.QtWidgets import QMenu
 from .layerVisibilityDialog import LayerVisibilityDialog
 from ..utils.webmapCommons import Utils
-from ..database.settingsManager import SettingsManager
 
 class SetLayerVisibilityContextMenuHandler:
     def __init__(self, iface, parent=None):

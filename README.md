@@ -17,6 +17,15 @@ Here is a list of features we provide:
   - Apply styles (QML files) to all tagged layers (raster or vector).
   - Download OSM data of all tagged vector layers.
 
+## Requirements and dependencies
+
+- Minimum QGis version 3.28
+- You need to install QuickOSM
+
+## Installing
+
+In QGis, install Webmap Utilities through the menu **Plugins -> Manage and Install Plugins**. Search for 'Webmap Utilities' and install. It may be necessary, in the Settings tab in the plugin manager, to check the option **Show also Experimental Plugins**.
+
 ## Quick Tutorial
 
 We built a tagging system to make it easy to replicate a map. Let's say you've made a map of a certain region and you like the result. To replicate this idea of ​​a map for another region, using Webmap Utilities it would take just a few clicks to: 

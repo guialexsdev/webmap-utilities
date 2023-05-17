@@ -1,5 +1,4 @@
 from json import JSONEncoder
-from qgis.core import QgsMessageLog
 
 class PROPERTY_DATA_TYPE:
 	NUMBER: str = 'number'
@@ -10,12 +9,13 @@ class Property:
   def __new__(cls, *args, **kwargs):
     return super().__new__(cls)
 
-  def __init__(self, name = None, description = None, type = None, isList = None, validValues = None):
+  def __init__(self, name = None, description = None, type = None, isList = None, validValues = None, isDefault = False):
     self.name = name
     self.description = description
     self.type = type
     self.isList = isList
     self.validValues = validValues
+    self.isDefault = isDefault
 
   def __repr__(self) -> str:
     return f'{self.name} = [{self.description},{self.type},{self.isList}]'
@@ -26,7 +26,8 @@ class Property:
       dict['description'],
       dict['type'],
       dict['isList'],
-      dict['validValues'] if 'validValues' in dict else None
+      dict['validValues'] if 'validValues' in dict else None,
+      dict['isDefault'] if 'isDefault' in dict else False
     )
 
 class PropertyEncoder(JSONEncoder):

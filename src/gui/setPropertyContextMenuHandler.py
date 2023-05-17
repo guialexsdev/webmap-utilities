@@ -1,4 +1,4 @@
-from qgis.core import QgsProject, NULL, QgsExpressionContextUtils, QgsMessageLog, QgsMapLayer
+from qgis.core import QgsProject, QgsMapLayer
 from qgis.PyQt.QtWidgets import QMenu
 from ..utils.webmapCommons import Utils
 from .settingsAddPropertyToTag import SettingAddPropertyToTag

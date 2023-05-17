@@ -1,11 +1,10 @@
 import os
 
-from qgis.core import QgsProject, QgsMessageLog
+from qgis.core import QgsProject
 from qgis.PyQt import uic, QtWidgets
 from qgis.PyQt.QtGui import QDoubleValidator
-from qgis.PyQt.QtWidgets import QStackedWidget, QMessageBox, QComboBox, QLineEdit, QTextBrowser, QPushButton, QListWidget, QListWidgetItem, QFileDialog
+from qgis.PyQt.QtWidgets import QMessageBox, QComboBox, QLineEdit, QTextBrowser, QPushButton, QListWidget, QListWidgetItem, QFileDialog
 from ..model.variable import Variable
-from ..model.property import Property
 from ..database.settingsManager import SettingsManager
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(

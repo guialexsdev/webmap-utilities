@@ -1,11 +1,9 @@
 import os
 
-from qgis.core import QgsMessageLog
-from qgis.PyQt import uic, QtWidgets, QtCore
+from qgis.PyQt import uic, QtWidgets
 from qgis.PyQt.QtCore import QPoint, Qt
 from qgis.PyQt.QtWidgets import QMenu, QTreeWidget, QTreeWidgetItem, QAction, QInputDialog, QLineEdit
 from ..utils.layerTreeOrganizer import LayerTreeOrganizer
-from ..model.variable import Variable
 from ..database.settingsManager import SettingsManager
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(

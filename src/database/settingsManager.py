@@ -19,18 +19,18 @@ class SettingsManager:
         
     def defaultProperties(self):
         return [
-            Property('_zoom_min',              'Minimum zoom level',                           PROPERTY_DATA_TYPE.NUMBER, False),
-            Property('_zoom_max',              'Maximum zoom level',                           PROPERTY_DATA_TYPE.NUMBER, False),
-            Property('_label_zoom_min',        'Minimum zoom level for labels',                PROPERTY_DATA_TYPE.NUMBER, False),
-            Property('_label_size_min',        'Minimum label size',                           PROPERTY_DATA_TYPE.NUMBER, False),
-            Property('_label_size_max',        'Maximum label size',                           PROPERTY_DATA_TYPE.NUMBER, False),
-            Property('_label_size_increment',  'Label size increment per zoom increment',      PROPERTY_DATA_TYPE.NUMBER, False),
-            Property('_symbol_zoom_min',       'Minimum zoom level for symbols',               PROPERTY_DATA_TYPE.NUMBER, False),
-            Property('_symbol_size_min',       'Minimum symbol size',                          PROPERTY_DATA_TYPE.NUMBER, False),
-            Property('_symbol_size_max',       'Maximum symbol size',                          PROPERTY_DATA_TYPE.NUMBER, False),
-            Property('_symbol_size_increment', 'Symbol size increment per zoom increment',     PROPERTY_DATA_TYPE.NUMBER, False),
-            Property('_symbol_color_sequence', 'Symbol colors per zoom',                       PROPERTY_DATA_TYPE.STRING, True),
-            Property('_style',                 'Style (qml file) to be automatically applied', PROPERTY_DATA_TYPE.FILE,   False)
+            Property('_zoom_min',              'Minimum zoom level',                           PROPERTY_DATA_TYPE.NUMBER, False, True),
+            Property('_zoom_max',              'Maximum zoom level',                           PROPERTY_DATA_TYPE.NUMBER, False, True),
+            Property('_label_zoom_min',        'Minimum zoom level for labels',                PROPERTY_DATA_TYPE.NUMBER, False, True),
+            Property('_label_size_min',        'Minimum label size',                           PROPERTY_DATA_TYPE.NUMBER, False, True),
+            Property('_label_size_max',        'Maximum label size',                           PROPERTY_DATA_TYPE.NUMBER, False, True),
+            Property('_label_size_increment',  'Label size increment per zoom increment',      PROPERTY_DATA_TYPE.NUMBER, False, True),
+            Property('_symbol_zoom_min',       'Minimum zoom level for symbols',               PROPERTY_DATA_TYPE.NUMBER, False, True),
+            Property('_symbol_size_min',       'Minimum symbol size',                          PROPERTY_DATA_TYPE.NUMBER, False, True),
+            Property('_symbol_size_max',       'Maximum symbol size',                          PROPERTY_DATA_TYPE.NUMBER, False, True),
+            Property('_symbol_size_increment', 'Symbol size increment per zoom increment',     PROPERTY_DATA_TYPE.NUMBER, False, True),
+            Property('_symbol_color_sequence', 'Symbol colors per zoom',                       PROPERTY_DATA_TYPE.STRING, True,  True),
+            Property('_style',                 'Style (qml file) to be automatically applied', PROPERTY_DATA_TYPE.FILE,   False, True)
         ]
 
     def cloneTagProperties(self, tagToBeCloned, newTag):

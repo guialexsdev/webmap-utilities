@@ -1,9 +1,8 @@
 import os
 
-from qgis.core import QgsProject, QgsMessageLog
 from qgis.PyQt import uic, QtWidgets
 from qgis.PyQt.QtCore import QPoint, Qt
-from qgis.PyQt.QtGui import QFont, QIcon
+from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QMenu, QTreeWidget, QTreeWidgetItem, QComboBox, QLineEdit, QInputDialog, QHeaderView, QMessageBox, QAction
 from ..model.settings import TAG_IDENTIFY_MODE
 from ..model.variable import Variable
@@ -131,10 +130,11 @@ class SettingsTagsPageWidget(QtWidgets.QWidget, FORM_CLASS):
 
         if ret == QMessageBox.No:
             return
-
-        listOfTagName = list(map(lambda x: x.text(0), items))
-        self.settingsManager.deleteTags(listOfTagName)
         
+        topLevelItems = list(filter(lambda x: self.isTagTreeItem(x), items))
+        listOfTagName = list(map(lambda x: x.text(0), topLevelItems))
+        self.settingsManager.deleteTags(listOfTagName)
+
         root = self.tagTreeWidget.invisibleRootItem()
         for item in self.tagTreeWidget.selectedItems():
             root.removeChild(item)
@@ -161,7 +161,7 @@ class SettingsTagsPageWidget(QtWidgets.QWidget, FORM_CLASS):
         dlg.setWindowTitle(title)
         dlg.exec_()
 
-    def cloneProperty(self, item: QTreeWidgetItem):
+    def cloneTag(self, item: QTreeWidgetItem):
         newTagItem = self.callAddOrUpdateTagDialog()
 
         if newTagItem is not None:
@@ -205,7 +205,7 @@ class SettingsTagsPageWidget(QtWidgets.QWidget, FORM_CLASS):
             editTagAction.triggered.connect(lambda: self.callAddOrUpdateTagDialog(item))
 
             cloneTagAction = QAction(f'Clone...', self.tagTreeWidget)
-            cloneTagAction.triggered.connect(lambda: self.cloneProperty(item))
+            cloneTagAction.triggered.connect(lambda: self.cloneTag(item))
 
             deleteTagAction = QAction(f'Delete', self.tagTreeWidget)
             deleteTagAction.triggered.connect(lambda: self.callDeleteTagDialog([item]))
@@ -239,7 +239,8 @@ class SettingsTagsPageWidget(QtWidgets.QWidget, FORM_CLASS):
 
         if selectedItems.__len__() > 0 and self.isTagTreeItem(selectedItems[0]):
             selectedTagItem = selectedItems[0]
-            self.cloneProperty(selectedTagItem)
+            selectedTagItem.setSelected(True)
+            self.cloneTag(selectedTagItem)
 
     def onFilterTextChanged(self):
         input = self.filterEditWidget.text()

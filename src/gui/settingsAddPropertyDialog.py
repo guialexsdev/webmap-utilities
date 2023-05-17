@@ -58,9 +58,9 @@ class SettingsAddPropertyDialog(QtWidgets.QDialog, FORM_CLASS):
           self.addListItem(v)
       else:
         self.validValuesGroup.setChecked(False)
-
-      self.nameEditWidget.setEnabled(True)
-      self.descrEditWidget.setEnabled(True)
+      QgsMessageLog.logMessage(str(self.previousProperty.isDefault), "hahah")
+      self.nameEditWidget.setEnabled(True and not self.previousProperty.isDefault)
+      self.descrEditWidget.setEnabled(True and not self.previousProperty.isDefault)
       self.typeComboWidget.setEnabled(False)
       self.listCheckWidget.setEnabled(False)
 

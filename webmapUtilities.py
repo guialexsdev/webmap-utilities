@@ -25,7 +25,7 @@ import math
 import os.path
 import sys
 
-from qgis.core import QgsProject, QgsExpressionContextUtils, QgsMessageLog,QgsApplication
+from qgis.core import QgsProject, QgsExpressionContextUtils
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon

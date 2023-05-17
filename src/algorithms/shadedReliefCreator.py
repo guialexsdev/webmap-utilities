@@ -1,4 +1,4 @@
-from qgis.core import QgsProcessing, QgsBrightnessContrastFilter, QgsBilinearRasterResampler, QgsExpression, QgsProcessingContext, QgsRasterLayer, QgsMapLayer, QgsRasterTransparency, QgsMessageLog, QgsProject
+from qgis.core import QgsProcessing, QgsBrightnessContrastFilter, QgsBilinearRasterResampler, QgsProcessingContext, QgsRasterLayer, QgsMapLayer, QgsProject
 from qgis.core import QgsProcessingAlgorithm
 from qgis.core import QgsProcessingMultiStepFeedback
 from qgis.core import QgsProcessingParameterNumber
@@ -13,7 +13,6 @@ class ShadedReliefCreator(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterRasterLayer('dem', 'dem', defaultValue=None))
         self.addParameter(QgsProcessingParameterNumber('ap_intensity', 'Aerial Perspective Intensity', type=QgsProcessingParameterNumber.Integer, minValue=-255, maxValue=255, defaultValue=60))
         self.addParameter(QgsProcessingParameterNumber('angle_between_light_sources', 'Angle Between Light Sources', type=QgsProcessingParameterNumber.Double, minValue=10, maxValue=180, defaultValue=45))
-        #self.addParameter(QgsProcessingParameterNumber('contrastmax', 'Contrast Max', type=QgsProcessingParameterNumber.Integer, minValue=-255, maxValue=255, defaultValue=50))
         self.addParameter(QgsProcessingParameterNumber('z_factor', 'Z Factor', type=QgsProcessingParameterNumber.Double, defaultValue=1))
         self.addParameter(QgsProcessingParameterNumber('scale', 'Scale', type=QgsProcessingParameterNumber.Double, defaultValue=1))
         self.addParameter(QgsProcessingParameterRasterDestination('HillshadeLayerBottom', 'Bottom Hillshade', createByDefault=True, defaultValue=None))

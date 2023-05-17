@@ -1,18 +1,14 @@
 import os
 
-from qgis.core import QgsProject, QgsMessageLog
 from qgis.PyQt import uic, QtWidgets, QtCore
 from qgis.PyQt.QtCore import QPoint, Qt
-from qgis.PyQt.QtGui import QFont, QIcon
-from qgis.PyQt.QtWidgets import QMenu, QTableWidget, QTableWidgetItem, QTextBrowser, QInputDialog, QHeaderView, QMessageBox, QAction, QAbstractItemView
+from qgis.PyQt.QtWidgets import QTableWidget, QTableWidgetItem, QTextBrowser, QHeaderView, QMessageBox, QAbstractItemView
 from .settingsAddPropertyDialog import SettingsAddPropertyDialog
 from ..model.property import Property
-from ..model.variable import Variable
-from .settingsAddPropertyToTag import SettingAddPropertyToTag
 from ..database.settingsManager import SettingsManager
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), '../../ui/webmap_properties_settings_page_widget2.ui'))
+    os.path.dirname(__file__), '../../ui/webmap_properties_settings_page_widget.ui'))
 
 class SettingsPropertiesPageWidget(QtWidgets.QWidget, FORM_CLASS):
     def __init__(self, settingsManager: SettingsManager, changesCallback, parent=None):
@@ -141,15 +137,24 @@ class SettingsPropertiesPageWidget(QtWidgets.QWidget, FORM_CLASS):
         if ret == QMessageBox.No:
             return
 
+        self.propertiesTableWidget.setSortingEnabled(False)
         listOfPropertyNames = list(map(lambda row: self.propertiesTableWidget.item(row, 0).text(), rows))
-        self.settingsManager.removeProperties(listOfPropertyNames)
+        listWithoutDefaultProps = list(filter(lambda x: not self.settingsManager.settings.properties[x].isDefault ,listOfPropertyNames))
+        self.settingsManager.removeProperties(listWithoutDefaultProps)
+        
+        #Rows should be reversed in order to remove properly all table cells
+        listOfRows = list(rows)
+        listOfRows.reverse()
 
-        for row in rows:
-           self.propertiesTableWidget.removeRow(row)
+        for row in listOfRows:
+           propName = self.propertiesTableWidget.item(row, 0).text()
+           if not self.settingsManager.settings.properties[propName].isDefault:
+            self.propertiesTableWidget.removeRow(row)
 
         self.propertiesTableWidget.itemSelectionChanged.connect(self.itemSelectionChanged)
         self.helpBrowser.clear()
         self.changesCallback()
+        self.propertiesTableWidget.setSortingEnabled(True)
 
     def itemSelectionChanged(self):
         selectedItems = self.propertiesTableWidget.selectedItems()

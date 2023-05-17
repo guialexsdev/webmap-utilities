@@ -1,6 +1,5 @@
-from qgis.core import QgsProject, QgsLayerTreeLayer, QgsLayerTreeNode, QgsLayerTreeGroup, QgsMapLayer, QgsLayerTree, QgsMapLayer, QgsMessageLog
+from qgis.core import QgsProject, QgsLayerTreeLayer, QgsLayerTreeNode, QgsLayerTreeGroup, QgsMapLayer, QgsLayerTree, QgsMapLayer
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtWidgets import QMessageBox
 from ..utils.webmapCommons import Utils
 from ..database.settingsManager import SettingsManager
 

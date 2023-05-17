@@ -5,17 +5,12 @@ Group : Webmap Utilities
 With QGIS : 32806
 """
 
-from qgis.core import QgsProcessingContext, QgsProcessing, QgsProject, QgsExpressionContextUtils, QgsProcessingUtils, QgsVectorLayer, QgsFeature, QgsMessageLog, QgsField
+from qgis.core import QgsProcessingContext, QgsProcessing, QgsProject, QgsExpressionContextUtils
 from qgis.core import QgsProcessingAlgorithm
 from qgis.core import QgsProcessingMultiStepFeedback
 from qgis.core import QgsProcessingParameterCrs
 from qgis.core import QgsProcessingParameterExtent
-from qgis.core import QgsProcessingParameterBoolean
-from qgis.PyQt.QtCore import QVariant
-from qgis.utils import iface
-import os
 import processing
-import json
 
 from ..database.settingsManager import SettingsManager
 from ..model.variable import Variable
