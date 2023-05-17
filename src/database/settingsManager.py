@@ -1,12 +1,13 @@
-#from ..model.property import Property
 from ..model.variable import Variable
 from ..database.variablesManager import VariablesManager
-from ..model.property import Property
+from ..model.property import PROPERTY_DATA_TYPE, Property
 from ..model.settings import Settings
-from qgis.core import QgsProject, QgsExpressionContextUtils, QgsMessageLog
+from qgis.core import QgsProject, QgsExpressionContextUtils
 import json
 
 class SettingsManager:
+    PROJECT_SETTINGS_VAR_KEY = 'webmap_settings'
+
     def __init__(self, settings: Settings = None, variablesManager: VariablesManager = None):
         if settings is None:
             self.settings = Settings()
@@ -14,25 +15,22 @@ class SettingsManager:
         else:
             self.settings = settings
 
-        if variablesManager is None:
-            self.variablesManager = VariablesManager()
-        else:
-            self.variablesManager = variablesManager
+        self.variablesManager = VariablesManager() if variablesManager is None else variablesManager
         
     def defaultProperties(self):
         return [
-            Property('_zoom_min', 'Minimum zoom level', 'number', False),
-            Property('_zoom_max', 'Maximum zoom level', 'number', False),
-            Property('_label_zoom_min', 'Minimum zoom level for labels', 'number', False),
-            Property('_label_size_min', 'Minimum label size', 'number', False),
-            Property('_label_size_max', 'Maximum label size', 'number', False),
-            Property('_label_size_increment', 'Label size increment per zoom increment', 'number', False),
-            Property('_symbol_zoom_min', 'Minimum zoom level for symbols', 'number', False),
-            Property('_symbol_size_min', 'Minimum symbol size', 'number', False),
-            Property('_symbol_size_max', 'Maximum symbol size', 'number', False),
-            Property('_symbol_size_increment', 'Symbol size increment per zoom increment', 'number', False),
-            Property('_symbol_color_sequence', 'Symbol colors per zoom', 'string', True),
-            Property('_style', 'Style (qml file) to be automatically applied', 'file', False)
+            Property('_zoom_min',              'Minimum zoom level',                           PROPERTY_DATA_TYPE.NUMBER, False),
+            Property('_zoom_max',              'Maximum zoom level',                           PROPERTY_DATA_TYPE.NUMBER, False),
+            Property('_label_zoom_min',        'Minimum zoom level for labels',                PROPERTY_DATA_TYPE.NUMBER, False),
+            Property('_label_size_min',        'Minimum label size',                           PROPERTY_DATA_TYPE.NUMBER, False),
+            Property('_label_size_max',        'Maximum label size',                           PROPERTY_DATA_TYPE.NUMBER, False),
+            Property('_label_size_increment',  'Label size increment per zoom increment',      PROPERTY_DATA_TYPE.NUMBER, False),
+            Property('_symbol_zoom_min',       'Minimum zoom level for symbols',               PROPERTY_DATA_TYPE.NUMBER, False),
+            Property('_symbol_size_min',       'Minimum symbol size',                          PROPERTY_DATA_TYPE.NUMBER, False),
+            Property('_symbol_size_max',       'Maximum symbol size',                          PROPERTY_DATA_TYPE.NUMBER, False),
+            Property('_symbol_size_increment', 'Symbol size increment per zoom increment',     PROPERTY_DATA_TYPE.NUMBER, False),
+            Property('_symbol_color_sequence', 'Symbol colors per zoom',                       PROPERTY_DATA_TYPE.STRING, True),
+            Property('_style',                 'Style (qml file) to be automatically applied', PROPERTY_DATA_TYPE.FILE,   False)
         ]
 
     def cloneTagProperties(self, tagToBeCloned, newTag):
@@ -68,32 +66,13 @@ class SettingsManager:
         self.settings.removeProperties(properties)
         self.variablesManager.removeByProperties(properties)
 
-    def settingsJsonToObj(jsonObj):
-        propertiesJsonObj = jsonObj['properties']
-        convertedPropertiesObj = {}
-
-        for prop in propertiesJsonObj:
-            convertedPropertiesObj[prop] = Property(
-                propertiesJsonObj[prop]['name'],
-                propertiesJsonObj[prop]['description'],
-                propertiesJsonObj[prop]['type'],
-                propertiesJsonObj[prop]['isList'],
-                propertiesJsonObj[prop]['validValues'] if 'validValues' in propertiesJsonObj[prop] else None
-            )
-
-        tags = jsonObj['tags'] if 'tags' in jsonObj else {}
-        structure = jsonObj['structure'] if 'structure' in jsonObj else {}
-        tagIdentifyMode = jsonObj['tagIdentifyMode'] if 'tagIdentifyMode' in jsonObj else None
-
-        return Settings(tags, convertedPropertiesObj, structure, tagIdentifyMode)
-
     def loadFromProject(project: QgsProject):
         scope = QgsExpressionContextUtils.projectScope(project)
 
-        if scope.hasVariable('webmap_settings'):
-            propertiesFromProject = scope.variable('webmap_settings')
+        if scope.hasVariable(SettingsManager.PROJECT_SETTINGS_VAR_KEY):
+            propertiesFromProject = scope.variable(SettingsManager.PROJECT_SETTINGS_VAR_KEY)
             jsonObj = json.loads(propertiesFromProject)
-            settings = SettingsManager.settingsJsonToObj(jsonObj)
+            settings = Settings.fromDict(jsonObj)
             variablesManager = VariablesManager.loadFromProject(settings, project)
             return SettingsManager(settings, variablesManager)
         else:
@@ -112,13 +91,15 @@ class SettingsManager:
     def importFromFile(self, filepath: str):
         file = open(filepath, "r")
         jsonObj = json.loads(file.read())
-        self.settings = SettingsManager.settingsJsonToObj(jsonObj['settings'])
-        self.variablesManager.variables = VariablesManager.variablesJsonToObj(jsonObj['variables'])
+
+        self.settings = Settings.fromDict(jsonObj['settings'])
+        self.variablesManager.variables = [Variable.fromDict(jsonObj[varName]) for varName in jsonObj['variables']]
         self.variablesManager.toDelete = []
         file.close()
 
     def persistToProject(self, project: QgsProject):
-        QgsExpressionContextUtils.setProjectVariable(project, 'webmap_settings', json.dumps(self.settings, cls=DefaultEncoder))
+        jsonStr = json.dumps(self.settings, cls=DefaultEncoder)
+        QgsExpressionContextUtils.setProjectVariable(project, SettingsManager.PROJECT_SETTINGS_VAR_KEY, jsonStr)
         self.variablesManager.persistToProject(project)
 
 class DefaultEncoder(json.JSONEncoder):

@@ -1,4 +1,3 @@
-
 from .property import Property
 
 class TAG_IDENTIFY_MODE:
@@ -44,4 +43,15 @@ class Settings:
 	def removeProperties(self, propertyNames: list[str]):
 		for property in propertyNames:
 			self.removeProperty(property)
-			
+
+	def fromDict(dict):
+		convertedPropertiesObj = {}
+	
+		for prop in dict['properties']:
+				convertedPropertiesObj[prop] = Property.fromDict(dict['properties'][prop])
+
+		tags = dict['tags'] if 'tags' in dict else {}
+		structure = dict['structure'] if 'structure' in dict else {}
+		tagIdentifyMode = dict['tagIdentifyMode'] if 'tagIdentifyMode' in dict else None
+
+		return Settings(tags, convertedPropertiesObj, structure, tagIdentifyMode)

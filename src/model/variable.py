@@ -1,6 +1,3 @@
-import re
-from qgis.core import QgsMessageLog
-
 class Variable:
     TEMP_PREFIX = 'webmap_temp_'
     
@@ -40,3 +37,6 @@ class Variable:
     @staticmethod
     def formatTempVariableName(tag, property) -> str:
         return f'{Variable.TEMP_PREFIX}{tag}[{property}]'
+    
+    def fromDict(dict):
+        return Variable(dict['tag'], dict['prop'], dict['value'])

@@ -37,7 +37,6 @@ class SettingsTagsPageWidget(QtWidgets.QWidget, FORM_CLASS):
         self.initialize()
 
     def initialize(self):
-        # QgsMessageLog.logMessage("AQUIIII", "OPAOPAOPAOPAO")
         self.tagTreeWidget.clear()
 
         groupedVariables = self.settingsManager.variablesManager.groupByTag()

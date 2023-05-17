@@ -1,4 +1,3 @@
-import json
 import os
 
 from qgis.core import QgsProject, QgsMessageLog
@@ -51,7 +50,8 @@ class SettingsDialog(QtWidgets.QDialog, FORM_CLASS):
         self.tagsPage.initialize()
 
     def onImportButtonClicked(self):
-        filepath, _ = QFileDialog.getOpenFileName(self, 'Import configuration file...', QgsProject.instance().homePath(), '*.wpc')
+        homePath = self.project.homePath()
+        filepath, _ = QFileDialog.getOpenFileName(self, 'Import configuration file...', homePath, '*.wpc')
 
         if filepath:
             ret = QMessageBox.question(
@@ -74,13 +74,12 @@ class SettingsDialog(QtWidgets.QDialog, FORM_CLASS):
                 QMessageBox.critical(self, "Error", "Import failed. File content seems invalid.")
 
     def onExportButtonClicked(self):
-        filepath, _ = QFileDialog.getSaveFileName(self, 'Export configuration file...', QgsProject.instance().homePath(), '*.wpc')
+        homePath = self.project.homePath()
+        filepath, _ = QFileDialog.getSaveFileName(self, 'Export configuration file...', homePath, '*.wpc')
 
         if filepath:
-            try:
-                self.settingsManager.exportToFile(filepath)
-            except Exception as e:
-                QMessageBox.information(self, "Save", "Configuration file successfully exported.")
+            self.settingsManager.exportToFile(filepath)
+            QMessageBox.information(self, "Save", "Configuration file successfully exported.")
 
     def handleApplyBtnEvent(self):
         self.settingsManager.persistToProject(self.project)

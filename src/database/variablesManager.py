@@ -1,5 +1,4 @@
-import json
-from qgis.core import QgsProject, QgsExpressionContextUtils, NULL, QgsMessageLog
+from qgis.core import QgsProject, QgsExpressionContextUtils, NULL
 from ..model.settings import Settings
 from ..model.variable import Variable
 
@@ -89,18 +88,6 @@ class VariablesManager:
               groupedByTag[variable.tag] = [variable]
 
       return groupedByTag
-
-    def variablesJsonToObj(jsonObj):
-        varsObj = {}
-
-        for varName in jsonObj:
-            varsObj[varName] = Variable(
-                jsonObj[varName]['tag'],
-                jsonObj[varName]['prop'],
-                jsonObj[varName]['value']
-            )
-
-        return varsObj
     
     def loadFromProject(settings: Settings, project: QgsProject):
       scope = QgsExpressionContextUtils.projectScope(project)
