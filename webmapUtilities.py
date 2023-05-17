@@ -182,7 +182,7 @@ class WebmapUtilities:
                     self.toolbar.removeAction(action)
 
         if self.toolbar is None:
-            self.createToolbar("Webmap Toolbar")
+            self.createToolbar("Webmap Utilities Toolbar")
 
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 

@@ -19,20 +19,22 @@ Aqui está uma lista de funcionalidades:
 
 ## Requisitos e dependências
 
-- Versão mínima do QGis: 3.28
-- É preciso instalar o plugin QuickOSM junto com este plugin.
+* Versão mínima do QGis: 3.28
+* É preciso instalar o plugin QuickOSM junto com este plugin.
 
 ## Instalação
 
 No QGis, instale o Webmap Utilities através do menu **Plugins -> Manage and Install Plugins**. Procure por Webmap Utitlities" e instale. Pode ser necessário, na aba Settings do gerenciador de plugins, marcar a opção **Show also Experimental Plugins**.
 
+Para acessar as ferramentas, clique com o botão direito em qualquer área livre da barra de ferramentas (barra de ícones) e marque **Webmap Utilities Toolbar**.
+
 ## Breve Tutorial
 
 O sistema de marcação facilita a replicação e a padronização de mapas. Digamos que você tenha construído um mapa de determinada região e tenha gostado do resultado. Para replicar esse mapa, mas para outra região, apenas alguns clicks seriam necessários para:
 
-- Automaticamente baixar todas as camadas do OSM
-- Automaticamente aplicar os estilos para todas as camadas marcadas (camadas vetorias ou raster)
-- Automaticamente organizar a árvore de camadas, na ordem correta.
+* Automaticamente baixar todas as camadas do OSM
+* Automaticamente aplicar os estilos para todas as camadas marcadas (camadas vetorias ou raster)
+* Automaticamente organizar a árvore de camadas, na ordem correta.
 
 ### Adicionando tags
 
@@ -40,8 +42,8 @@ O sistema de tags é simples. Primeiro você define em qual categoria cai cada c
 
 Em seguida, precisamos planejar como o plugin irá reconhecer a tag de uma camada. Atualmente isso pode ser feito de 2 formas:
 
-- Colocando logo no início do nome da camada a TAG escolhida. Por exemplo, nossas camadas de cidades podem ser nomeadas por **cidades fonte1** e **cidades fonte2**.
-- Ou então é possível apenas inserir a TAG nos metadados da cama. Basta ir em Propriedades -> Metadados -> Categorias e inserir lá a tag escolhida.
+* Colocando logo no início do nome da camada a TAG escolhida. Por exemplo, nossas camadas de cidades podem ser nomeadas por **cidades fonte1** e **cidades fonte2**.
+* Ou então é possível apenas inserir a TAG nos metadados da cama. Basta ir em Propriedades -> Metadados -> Categorias e inserir lá a tag escolhida.
 
 Agora vá em ![](/images/settings.png) **Settings** e registre a tag clicando no botão ![](/images/symbologyAdd.png) **Add new tag...**. Não esqueça de selecionar, no seletor da parte inferior da tela, o modo de identificação das tags!
 
@@ -86,10 +88,10 @@ controlVisibilityByPercentilesIncrement(@zoom_level, 'population', 5, 10)
 
 Explicando os argumentos:
 
-- 1º parametro: nivel de zoom atual.
-- 2º parametro: nome do atributos a ser considerado nos cálculos (seria o campo que conteria a população das cidades, no nosso exemplo).
-- 3º parametro: Percentil mínimo (5%, no nosso exemplo)
-- 4º parametro: Incremento, por zoom, ao percentil mínimo (a partir de 5%, crescendo de 10% em 10%).
+* 1º parametro: nivel de zoom atual.
+* 2º parametro: nome do atributos a ser considerado nos cálculos (seria o campo que conteria a população das cidades, no nosso exemplo).
+* 3º parametro: Percentil mínimo (5%, no nosso exemplo)
+* 4º parametro: Incremento, por zoom, ao percentil mínimo (a partir de 5%, crescendo de 10% em 10%).
 
 ### Aplicando estilos automaticamente
 
@@ -105,9 +107,9 @@ Você pode adicionar propriedades OSM à suas tags de forma que o plugin consiga
 
 Por exemplo, uma possível configuração para baixar rodovias seria:
 
-- `_osm_key` = highway
-- `_osm_values` ​​= [primary, secondary, tertiary]
-- `_osm_type` = lines
+* `_osm_key` = highway
+* `_osm_values` ​​= [primary, secondary, tertiary]
+* `_osm_type` = lines
 
 Para baixar automaticamente os dados OSM de todas as tags, basta clicar em ![](/images/osm.png), selecionar o CRS e a extensão. Tenha em mente que só serão baixadas as camadas com tag que possuam todas as três propriedades acima mencionadas.
 
@@ -118,3 +120,13 @@ O plugin gera 2 camadas raster de sombreamento, já na ordem em que precisam est
 Além disso, as duas camadas recebem o efeito de Perspectiva Aérea: quanto mais alto, mais contraste. Isso é bom porque em geral as porções mais baixas de determinada regiões é que contém a maior quantidade de cidades, vilas, estradas, estabelecimentos etc... e menos constraste significa maior facilidade para ler o mapa quando há muitos elementos sobre ele. Caso queira, aqui está um bom artigo sobre esse tema: http://www.reliefshading.com/design/aerial-perspective/.=
 
 Clique em ![](/images/relief_creator.png) para gerar o sombreamento.
+
+
+### Outras funcionalidades
+
+* Ao invés de usar o seletor de escalas, aquele que fica na parte inferior da tela, você pode usar o seletor de niveis de zoom, que fica ao lados dos ícones da barra nossa barra de ferramentas.
+* Existem duas maneiras de adicionar e editar tags. Você acessar a opção ![](/images/settings.png) **Settings** e lá escolher a aba Tag ou Properties; ou então pode clicar com o botão direito em qualquer camada com tag e escolher as opções de **Set tag property...**.
+* Você pode criar as próprias propriedades. Lá em ![](/images/settings.png) **Settings** é só abrir a aba **Properties** e cadastrar. Após isso, ela estará disponível para uso na aba **Tags**.
+* Para replicar as mesmas configurações, tags e propriedades em outro projeto você pode:
+   - Exportar e Importar (há opções para isso em ![](/images/settings.png) **Settings**)
+   - Ou criar um Projeto Template no Qgis (e nada mais, já que todas as configurações são guardadas no projeto)
