@@ -34,7 +34,7 @@ O sistema de marcação facilita a replicação e a padronização de mapas. Dig
 - Automaticamente aplicar os estilos para todas as camadas marcadas (camadas vetorias ou raster)
 - Automaticamente organizar a árvore de camadas, na ordem correta.
 
-### Adding a tag
+### Adicionando tags
 
 O sistema de tags é simples. Primeiro você define em qual categoria cai cada camada. Por exemplo, suponha que você tenha várias camadas de pontos, de diferentes fontes, representando as **cidades** de determinada região. Embora possam ter diferentes nomes e até features diferentes, todas essas camadas podem ser classificadas como sendo de um mesmo tipo, de uma mesma TAG, chamada **cidade**.
 
@@ -110,7 +110,6 @@ Por exemplo, uma possível configuração para baixar rodovias seria:
 - `_osm_type` = lines
 
 Para baixar automaticamente os dados OSM de todas as tags, basta clicar em ![](/images/osm.png), selecionar o CRS e a extensão. Tenha em mente que só serão baixadas as camadas com tag que possuam todas as três propriedades acima mencionadas.
-
 
 ### Gerando Sombreamento
 
