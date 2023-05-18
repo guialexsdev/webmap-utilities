@@ -25,7 +25,7 @@ import math
 import os.path
 import sys
 
-from qgis.core import QgsProject, QgsExpressionContextUtils
+from qgis.core import QgsProject, QgsExpressionContextUtils, QgsMessageLog
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
@@ -78,9 +78,7 @@ class WebmapUtilities:
         self.actions = []
         self.menu = '&Webmap Utilities'
 
-        # Check if plugin was started the first time in current QGIS session
-        # Must be set in initGui() to survive plugin reloads
-        self.first_start = None
+        self.zoomLevelComboWidget = None
 
     def createToolbar(self, name):
         if self.toolbar is None:
@@ -216,7 +214,9 @@ class WebmapUtilities:
             self.runShadedReliefCreator
         )
 
-        self.addZoomLevelWidget()
+        
+        QgsMessageLog.logMessage("SUBSCRIBING mapScalesChanged","debugao")
+        QgsProject().instance().viewSettings().mapScalesChanged.connect(self.addOrUpdateZoomLevelWidget)
         self.iface.layerTreeView().contextMenuAboutToShow.connect(self.contextMenuAboutToShow)
         self.iface.currentLayerChanged.connect(self.currentLayerChanged)
 
@@ -293,54 +293,66 @@ class WebmapUtilities:
 
     def contextMenuAboutToShow(self, menu):
         EventListeners.onContextMenuAboutToShow(self.iface, menu)
-
+        
     def currentLayerChanged(self, layer):
         EventListeners.layerChangedUpdatesQuickInfo(self.iface, layer)
 
-    def addZoomLevelWidget(self):
+    def updateZoomLevelWidget(self):
+        predefinedScales = QgsProject.instance().viewSettings().mapScales()
+
+        if len(predefinedScales) != 0:
+            scale = int(math.floor(self.iface.mapCanvas().scale()))
+            targetScale = min(predefinedScales, key=lambda x:abs(x-scale))
+            zoomLevelComboIndex = predefinedScales.index(targetScale)
+            self.zoomLevelComboWidget.setCurrentIndex(zoomLevelComboIndex)
+
+    def updateScale(self, index):
+        predefinedScales = QgsProject.instance().viewSettings().mapScales()
+
+        if (predefinedScales.__len__() == 0):
+            return
+        
+        canvas = self.iface.mapCanvas()
+        canvas.zoomScale(predefinedScales[int(index)])
+
+    def initializeZoomLevelWidget(self):
+        self.zoomLevelComboWidget.clear()
+
+        predefinedScales = QgsProject.instance().viewSettings().mapScales()
+
+        if (predefinedScales.__len__() == 0):
+            return
+    
+        for z in range(len(predefinedScales)):
+            self.zoomLevelComboWidget.addItem(str(z))
+        self.updateZoomLevelWidget()
+        
+    def addOrUpdateZoomLevelWidget(self):
+        if self.zoomLevelComboWidget is not None:
+           QgsMessageLog.logMessage("self.zoomLevelComboWidget IS NOT None","debugao")
+           self.initializeZoomLevelWidget()
+           return
+    
+        QgsMessageLog.logMessage("self.zoomLevelComboWidget IS None","debugao")
         parent = self.iface.mainWindow()
         label = QLabel(parent)
-        combo = QComboBox(parent)
+        self.zoomLevelComboWidget = QComboBox(parent)
 
-        def updateZoomLevelWidget():
-            predefinedScales = QgsProject.instance().viewSettings().mapScales()
-            if len(predefinedScales) != 0:
-                scale = int(math.floor(self.iface.mapCanvas().scale()))
-                targetScale = min(predefinedScales, key=lambda x:abs(x-scale))
-                zoomLevelComboIndex = predefinedScales.index(targetScale)
-                combo.setCurrentIndex(zoomLevelComboIndex)
-
-        def updateScale(index):
-            predefinedScales = QgsProject.instance().viewSettings().mapScales()
-
-            if (predefinedScales.__len__() == 0):
-                return
-            
-            canvas = self.iface.mapCanvas()
-            canvas.zoomScale(predefinedScales[int(index)])
-
-        def initializeWidget():
-            predefinedScales = QgsProject.instance().viewSettings().mapScales()
-
-            if (predefinedScales.__len__() == 0):
-                return
-        
-            for z in range(len(predefinedScales)):
-                combo.addItem(str(z))
-            updateZoomLevelWidget()
-            self.iface.mapCanvas().scaleChanged.connect(updateZoomLevelWidget)
-            combo.currentTextChanged.connect(updateScale)
+        label.setText("Zoom Level:")
+        self.initializeZoomLevelWidget()
 
         def afterProjectLoaded():
-            initializeWidget()
+            self.initializeZoomLevelWidget()
             self.iface.projectRead.disconnect(afterProjectLoaded)
+            self.iface.mapCanvas().scaleChanged.connect(self.updateZoomLevelWidget)
+            self.zoomLevelComboWidget.currentTextChanged.connect(self.updateScale)
 
         if QgsProject.instance().fileName().strip() == '':
             self.iface.projectRead.connect(afterProjectLoaded)
         else:
-            initializeWidget()
-
-        label.setText("Zoom Level:")
-
+            self.initializeZoomLevelWidget()
+            self.iface.mapCanvas().scaleChanged.connect(self.updateZoomLevelWidget)
+            self.zoomLevelComboWidget.currentTextChanged.connect(self.updateScale)
+            
         self.addWidgetToCustomToolbar(label)
-        self.addWidgetToCustomToolbar(combo)
+        self.addWidgetToCustomToolbar(self.zoomLevelComboWidget)

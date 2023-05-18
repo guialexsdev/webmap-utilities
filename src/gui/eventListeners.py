@@ -21,8 +21,12 @@ class EventListeners:
         if selectedLayers is not None:
             menu.addSeparator()
             settingsManager = SettingsManager.loadFromProject(project)
-            SetPropertyContextMenuHandler(iface, settingsManager, menu.parent()).handle(menu, selectedLayers)
-            SetLayerVisibilityContextMenuHandler(iface, menu.parent()).handle(menu, selectedLayers)
+
+            if settingsManager is not None:
+                SetPropertyContextMenuHandler(iface, settingsManager, menu.parent()).handle(menu, selectedLayers)
+
+            if QgsProject.instance().viewSettings().mapScales().__len__() > 0:
+                SetLayerVisibilityContextMenuHandler(iface, menu.parent()).handle(menu, selectedLayers)
 
     def layerChangedUpdatesQuickInfo(iface, layer):
         if layer is not None:
@@ -39,6 +43,9 @@ class EventListeners:
             maxZoom = len(predefinedScales) - 1
 
             settingsManager = SettingsManager.loadFromProject(project)
+
+            if settingsManager is None:
+                return
 
             tag = Utils.getLayerTag(layer, settingsManager.settings)
             minZoomFromVars = int(Utils.getVariable(tag, '_zoom_min', None, minZoom)[1])
