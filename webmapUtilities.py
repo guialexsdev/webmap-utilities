@@ -183,6 +183,11 @@ class WebmapUtilities:
             self.createToolbar("Webmap Utilities Toolbar")
 
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
+        self.addButtonToCustomToolbar(
+            'Configure Project',
+            ':/icons/configure_project.png',
+            self.runConfigureProject
+        )
 
         self.addButtonToCustomToolbar(
             'Settings',
@@ -201,7 +206,7 @@ class WebmapUtilities:
             ':/icons/apply_structure.png',
             self.runApplyStructure
         )
-        
+
         self.addButtonToCustomToolbar(
             'OSM Downloader',
             ':/icons/osm.png',
@@ -214,9 +219,9 @@ class WebmapUtilities:
             self.runShadedReliefCreator
         )
 
-        
-        QgsMessageLog.logMessage("SUBSCRIBING mapScalesChanged","debugao")
-        QgsProject().instance().viewSettings().mapScalesChanged.connect(self.addOrUpdateZoomLevelWidget)
+        self.addZoomLevelWidget()
+
+        QgsProject().instance().viewSettings().mapScalesChanged.connect(self.addZoomLevelWidget)
         self.iface.layerTreeView().contextMenuAboutToShow.connect(self.contextMenuAboutToShow)
         self.iface.currentLayerChanged.connect(self.currentLayerChanged)
 
@@ -228,6 +233,12 @@ class WebmapUtilities:
         for action in self.actions:
             self.iface.removeToolBarIcon(action)
 
+    def runConfigureProject(Self):
+        mercatorScales = [554678932,277339466,138669733,69334866,34667433,17333716,8666858,4333429,2166714,1083357,541678,270839,135419,67709,33854,16927,8463,4231,2115]
+        viewSettings = QgsProject().instance().viewSettings()
+        viewSettings.setMapScales(mercatorScales)
+        viewSettings.setUseProjectScales(True)
+
     def runOSMDownloader(self):
         alg: DownloadOsmByTag = DownloadOsmByTag()
         processing.execAlgorithmDialog(alg)
@@ -238,14 +249,6 @@ class WebmapUtilities:
 
     def runSettingsDialog(self):
         self.dlg = SettingsDialog(self.iface)
-        self.dlg.show()
-
-        result = self.dlg.exec_()
-        if result:
-            pass
-
-    def runLayerVisibilityDialog(self):
-        self.dlg = LayerVisibilityDialog(self.iface)
         self.dlg.show()
 
         result = self.dlg.exec_()
@@ -297,6 +300,8 @@ class WebmapUtilities:
     def currentLayerChanged(self, layer):
         EventListeners.layerChangedUpdatesQuickInfo(self.iface, layer)
 
+    #TODO move all the methods below to another class
+
     def updateZoomLevelWidget(self):
         predefinedScales = QgsProject.instance().viewSettings().mapScales()
 
@@ -307,8 +312,11 @@ class WebmapUtilities:
             self.zoomLevelComboWidget.setCurrentIndex(zoomLevelComboIndex)
 
     def updateScale(self, index):
+        if index == None or index < 0:
+            return
+        
         predefinedScales = QgsProject.instance().viewSettings().mapScales()
-
+        
         if (predefinedScales.__len__() == 0):
             return
         
@@ -324,35 +332,31 @@ class WebmapUtilities:
             return
     
         for z in range(len(predefinedScales)):
-            self.zoomLevelComboWidget.addItem(str(z))
+            self.zoomLevelComboWidget.addItem(str(z)) 
+
+        self.updateScale(Utils.scaleToZoomLevel(predefinedScales, self.iface.mapCanvas().scale()))
         self.updateZoomLevelWidget()
-        
-    def addOrUpdateZoomLevelWidget(self):
-        if self.zoomLevelComboWidget is not None:
-           QgsMessageLog.logMessage("self.zoomLevelComboWidget IS NOT None","debugao")
-           self.initializeZoomLevelWidget()
-           return
     
-        QgsMessageLog.logMessage("self.zoomLevelComboWidget IS None","debugao")
+    def addZoomLevelWidget(self):
+        if self.zoomLevelComboWidget is not None:
+            self.zoomLevelComboWidget.currentIndexChanged.disconnect(self.updateScale)
+            self.iface.mapCanvas().scaleChanged.disconnect(self.updateZoomLevelWidget)
+            self.initializeZoomLevelWidget()
+            self.zoomLevelComboWidget.currentIndexChanged.connect(self.updateScale)
+            self.iface.mapCanvas().scaleChanged.connect(self.updateZoomLevelWidget)
+            return
+    
         parent = self.iface.mainWindow()
+
         label = QLabel(parent)
+        label.setText("Zoom Level:")
+
         self.zoomLevelComboWidget = QComboBox(parent)
 
-        label.setText("Zoom Level:")
         self.initializeZoomLevelWidget()
+        self.zoomLevelComboWidget.currentIndexChanged.connect(self.updateScale)
 
-        def afterProjectLoaded():
-            self.initializeZoomLevelWidget()
-            self.iface.projectRead.disconnect(afterProjectLoaded)
-            self.iface.mapCanvas().scaleChanged.connect(self.updateZoomLevelWidget)
-            self.zoomLevelComboWidget.currentTextChanged.connect(self.updateScale)
-
-        if QgsProject.instance().fileName().strip() == '':
-            self.iface.projectRead.connect(afterProjectLoaded)
-        else:
-            self.initializeZoomLevelWidget()
-            self.iface.mapCanvas().scaleChanged.connect(self.updateZoomLevelWidget)
-            self.zoomLevelComboWidget.currentTextChanged.connect(self.updateScale)
+        self.iface.mapCanvas().scaleChanged.connect(self.updateZoomLevelWidget)
             
         self.addWidgetToCustomToolbar(label)
         self.addWidgetToCustomToolbar(self.zoomLevelComboWidget)

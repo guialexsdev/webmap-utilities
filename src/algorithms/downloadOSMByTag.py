@@ -5,7 +5,7 @@ Group : Webmap Utilities
 With QGIS : 32806
 """
 
-from qgis.core import QgsProcessingContext, QgsProcessing, QgsProject, QgsExpressionContextUtils
+from qgis.core import QgsProcessingContext, QgsProcessing, QgsProject, QgsExpressionContextUtils, QgsMessageLog
 from qgis.core import QgsProcessingAlgorithm
 from qgis.core import QgsProcessingMultiStepFeedback
 from qgis.core import QgsProcessingParameterCrs
@@ -36,12 +36,11 @@ class DownloadOsmByTag(QgsProcessingAlgorithm):
             typeVar   = Variable.formatVariableName(tag, '_osm_type')
 
             if projectScope.hasVariable(keyVar) and projectScope.hasVariable(typeVar):
-                keys   = str(projectScope.variable(keyVar)).split(';')
-                values = str(projectScope.variable(valuesVar)).split(';')
+                values = str(projectScope.variable(valuesVar)).replace(';',',')
+                keys   = [str(projectScope.variable(keyVar))] * values.split(',').__len__()
                 type   = str(projectScope.variable(typeVar))
 
-                for index in range(keys.__len__()):
-                    queries.append((tag, keys[index], values[index], type))
+                queries.append((tag, ','.join(keys), values, type))
 
         feedback = QgsProcessingMultiStepFeedback(5*queries.__len__(), model_feedback)
         results = {}

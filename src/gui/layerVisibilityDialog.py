@@ -42,8 +42,17 @@ class LayerVisibilityDialog(QtWidgets.QDialog, FORM_CLASS):
             layer.setScaleBasedVisibility(self.visibilityBoxWidget.isChecked())
             
             if self.visibilityBoxWidget.isChecked():
-                layer.setMinimumScale(predefinedScales[int(self.minZoomLevelCombo.currentText())])
-                layer.setMaximumScale(predefinedScales[int(self.maxZoomLevelCombo.currentText())])
+                indexMin = int(self.minZoomLevelCombo.currentText())
+                indexMax = int(self.maxZoomLevelCombo.currentText())
+
+                # These steps are necessary because QGis use min (exclusive), be here we use min (inclusive)
+                # If user selected zoom level > 0, than subtract 1 because we use inclusive range. 
+                # If zoom = 0, we just subtract a small number to make 0 included.
+                minScale = predefinedScales[indexMin - 1] if indexMin > 0 else predefinedScales[0] - 100
+                maxScale = predefinedScales[indexMax]
+
+                layer.setMinimumScale(minScale)
+                layer.setMaximumScale(maxScale)
 
         self.iface.mapCanvas().refreshAllLayers()
 

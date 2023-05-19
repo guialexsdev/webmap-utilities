@@ -16,7 +16,7 @@ class SetLayerVisibilityContextMenuHandler:
 
         if selectedLayers.__len__() == 1:
             predefinedScales = QgsProject.instance().viewSettings().mapScales()
-            defaultZoomMin = Utils.scaleToZoomLevel(predefinedScales, selectedLayers[0].minimumScale())
+            defaultZoomMin = Utils.scaleToZoomLevel(predefinedScales, selectedLayers[0].minimumScale()) + 1
             defaultZoomMax = Utils.scaleToZoomLevel(predefinedScales, selectedLayers[0].maximumScale())
 
         action.triggered.connect(lambda: LayerVisibilityDialog(self.iface, selectedLayers, defaultZoomMin, defaultZoomMax, self.parent).exec_())

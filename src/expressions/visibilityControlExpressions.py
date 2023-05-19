@@ -2,8 +2,8 @@ from qgis.core import qgsfunction, NULL, QgsExpressionContext
 from ..utils.webmapCommons import Utils
 import numpy as np
 
-@qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibility(currentZoom, feature, parent, context):
+@qgsfunction(args='auto', group='Webmap - Visibility', referenced_columns=['_zoom_min','_zoom_max'])
+def controlVisibility(feature, parent, context):
     """
     controlVisibilityOffset(currentZoom)<br><br>
     Controls features visibility by _zoom_min and _zoom_max properties. If a feature don't have these properties or they are NULL, 
@@ -19,13 +19,14 @@ def controlVisibility(currentZoom, feature, parent, context):
     """
     key = Utils.getCachedLayerTag(context)
 
+    currentZoom = context.variable('zoom_level') + 1
     minZoom = int(Utils.getVariable(key, '_zoom_min', feature)[1])
     maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1])
 
     return 1 if currentZoom >= minZoom and currentZoom <= maxZoom else 0
 
 @qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibilityOffset(currentZoom, minZoomOffset, maxZoomOffset, feature, parent, context):
+def controlVisibilityOffset(minZoomOffset, maxZoomOffset, feature, parent, context):
     """
     controlVisibilityOffset(currentZoom, minZoomOffset, maxZoomOffset)<br><br>
     Controls features visibility by _zoom_min and _zoom_max properties. This function adds an offset value to the _zoom_min and _zoom_max values,
@@ -46,13 +47,14 @@ def controlVisibilityOffset(currentZoom, minZoomOffset, maxZoomOffset, feature, 
     """
     key = Utils.getCachedLayerTag(context)
 
+    currentZoom = context.variable('zoom_level') + 1
     minZoom = int(Utils.getVariable(key, '_zoom_min', feature)[1]) + minZoomOffset
     maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1]) + maxZoomOffset 
 
     return 1 if currentZoom >= minZoom and currentZoom <= maxZoom else 0
 
 @qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibilityByPercentilesArray(currentZoom, attribute, percentiles, feature, parent, context: QgsExpressionContext):
+def controlVisibilityByPercentilesArray(attribute, percentiles, feature, parent, context: QgsExpressionContext):
     """
     controlVisibilityByPercentilesArray(currentZoom, attribute, percentiles)<br><br>
     Controls features visibility by using an array of percentiles. For example, say you have a vector layer containing cities and its populations. 
@@ -94,6 +96,7 @@ def controlVisibilityByPercentilesArray(currentZoom, attribute, percentiles, fea
             maxAttr = float(layer.maximumValue(idx))
             context.setCachedValue('_layer_max', maxAttr)
 
+        currentZoom = context.variable('zoom_level') + 1
         minZoom = int(Utils.getVariable(key, '_zoom_min', feature)[1])
         maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1])
 
@@ -126,7 +129,7 @@ def controlVisibilityByPercentilesArray(currentZoom, attribute, percentiles, fea
         return 0
     
 @qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibilityByPercentilesIncrement(currentZoom, attribute, minPercentile, increment, feature, parent, context):
+def controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment, feature, parent, context):
     """
     controlVisibilityByPercentilesIncrement(currentZoom, attribute, minPercentile, increment)<br><br>
     Controls features visibility by using a minimum percentile value that will be automaticaly incremented. 
@@ -170,6 +173,7 @@ def controlVisibilityByPercentilesIncrement(currentZoom, attribute, minPercentil
             maxAttr = float(layer.maximumValue(idx))
             context.setCachedValue('_layer_max', maxAttr)
 
+        currentZoom = context.variable('zoom_level') + 1
         minZoom = int(Utils.getVariable(key, '_zoom_min', feature)[1])
         maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1])
         _increment = float(Utils.getVariable(key, increment, feature)[1] if isinstance(increment, str) else increment)

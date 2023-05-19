@@ -1,5 +1,6 @@
 <RCC>
     <qresource>
+        <file>./icons/configure_project.png</file>
         <file>./icons/settings.png</file>
         <file>./icons/apply_style.png</file>
         <file>./icons/apply_structure.png</file>

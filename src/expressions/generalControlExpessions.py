@@ -1,8 +1,12 @@
-from qgis.core import qgsfunction
+from qgis.core import qgsfunction, QgsMessageLog
 from ..utils.webmapCommons import Utils
 
 @qgsfunction(args='auto', group='Webmap - General')
-def controlByIncrement(currentZoom, increment, minValue, maxValue, feature, parent, context):
+def zoomLevel(feature, parent, context):
+    return context.variable('zoom_level') + 1
+
+@qgsfunction(args='auto', group='Webmap - General')
+def controlByIncrement(increment, minValue, maxValue, feature, parent, context):
     """
     controlByIncrement(currentZoom, increment, minValue, maxValue)<br><br>
     Controls any numeric property of features by incrementing a value from minValue up to maxValue. For example,
@@ -27,6 +31,7 @@ def controlByIncrement(currentZoom, increment, minValue, maxValue, feature, pare
 
     key = Utils.getCachedLayerTag(context)
 
+    currentZoom = context.variable('zoom_level') + 1
     _minZoom   = float(Utils.getVariable(key, '_zoom_min', feature)[1])
     _minValue  = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
     _maxValue  = float(Utils.getVariable(key, maxValue, feature)[1] if isinstance(maxValue, str) else maxValue)
@@ -37,7 +42,7 @@ def controlByIncrement(currentZoom, increment, minValue, maxValue, feature, pare
     return Utils.boundValue(_size, _minValue, _maxValue)
 
 @qgsfunction(args='auto', group='Webmap - General')
-def controlByArray(currentZoom, array, feature, parent, context):
+def controlByArray(array, feature, parent, context):
     """
     controlByArray(currentZoom, array)<br><br>
     Controls any numeric property of features by using values of a fixed array. For example,
@@ -61,13 +66,14 @@ def controlByArray(currentZoom, array, feature, parent, context):
     """
     key = Utils.getCachedLayerTag(context)
 
+    currentZoom = context.variable('zoom_level') + 1
     _minZoom = float(Utils.getVariable(key, '_zoom_min', feature)[1])
     _array   = Utils.strToArrayOfNumbers(Utils.getVariable(key, array, feature)[1]) if isinstance(array, str) else array
 
     return _array[int(Utils.boundValue(currentZoom - _minZoom, 0, _array.__len__() - 1))]
 
 @qgsfunction(args='auto', group='Webmap - General')
-def controlByMinMaxNormalization(currentZoom, minValue, maxValue, feature, parent, context):
+def controlByMinMaxNormalization(minValue, maxValue, feature, parent, context):
     """
     controlByMinMaxNormalization(currentZoom, minValue, maxValue)<br><br>
     Controls any numeric property of features by using min-max normalization. You just need to choose a minValue
@@ -90,6 +96,7 @@ def controlByMinMaxNormalization(currentZoom, minValue, maxValue, feature, paren
     """
     key = Utils.getCachedLayerTag(context)
 
+    currentZoom = context.variable('zoom_level') + 1
     _minZoom  = float(Utils.getVariable(key, '_zoom_min', feature)[1])
     _maxZoom  = float(Utils.getVariable(key, '_zoom_max', feature)[1])
     _minValue = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)

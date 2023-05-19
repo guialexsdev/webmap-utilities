@@ -1,4 +1,4 @@
-from qgis.core import QgsExpressionContextUtils, QgsExpressionContext, QgsProject, QgsMapLayer, NULL, QgsMapLayer
+from qgis.core import QgsExpressionContextUtils, QgsExpressionContext, QgsProject, QgsMapLayer, NULL, QgsMapLayer, QgsMessageLog
 from ..model.settings import TAG_IDENTIFY_MODE, Settings
 from ..database.settingsManager import SettingsManager
 from ..model.variable import Variable
@@ -9,7 +9,7 @@ class Utils:
             return feature[prop]
         except:
             return NULL
-            
+        
     def getCachedLayerTag(context: QgsExpressionContext):
         tagFound = context.cachedValue('webmap_current_tag')
 

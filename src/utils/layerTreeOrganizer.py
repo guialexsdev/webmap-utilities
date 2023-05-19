@@ -1,4 +1,4 @@
-from qgis.core import QgsProject, QgsLayerTreeLayer, QgsLayerTreeNode, QgsLayerTreeGroup, QgsMapLayer, QgsLayerTree, QgsMapLayer
+from qgis.core import QgsProject, QgsLayerTreeLayer, QgsLayerTreeNode, QgsLayerTreeGroup, QgsMapLayer, QgsLayerTree, QgsMapLayer, QgsMessageLog
 from qgis.gui import QgisInterface
 from ..utils.webmapCommons import Utils
 from ..database.settingsManager import SettingsManager
@@ -26,10 +26,14 @@ class LayerTreeOrganizer:
         root = QgsProject.instance().layerTreeRoot()
         index = 0
 
+        QgsMessageLog.logMessage(f'LEN: {layers.__len__()}', "structure")
         for layer in layers:
+            QgsMessageLog.logMessage(f'-------> Layer: {str(layer.name())}', "structure")
             treeLayer = root.findLayer(layer.id())
+            QgsMessageLog.logMessage(f'treeLayer: {str(treeLayer.name())}', "structure")
             treeLayerClone = treeLayer.clone()
             parent: QgsLayerTreeNode = treeLayer.parent()
+            QgsMessageLog.logMessage(f'Parent: {str(parent.name())}', "structure")
 
             group.insertChildNode(index, treeLayerClone)
             parent.removeChildNode(treeLayer)
@@ -64,16 +68,19 @@ class LayerTreeOrganizer:
     
     def getTocLayers(self, arr, group, tags):
         settings = self.settingsManager.settings
-
+   
         for child in group.children():
-            tagMatched = False
+            indexMatchedTag = -1
 
-            for tag in tags:
-                if isinstance(child, QgsLayerTreeLayer) and Utils.getLayerTag(child.layer(), settings) == tag:
-                    tagMatched = True
+            if child.nodeType() == QgsLayerTree.NodeType.NodeGroup:
+                self.getTocLayers(arr, child, tags)
+            else:
+                for index in range(tags.__len__()):
+                    if isinstance(child, QgsLayerTreeLayer) and Utils.getLayerTag(child.layer(), settings) == tags[index]:
+                        indexMatchedTag = index
 
-            if tagMatched:
-                arr.append(child.layer())
+                if indexMatchedTag >= 0:
+                    arr.insert(indexMatchedTag, child.layer())
 
     def getStructure(self):
         #selectedNodes = self.iface.layerTreeView().selectedLayerNodes()
@@ -90,7 +97,12 @@ class LayerTreeOrganizer:
         root = QgsProject.instance().layerTreeRoot()
 
         for path in referenceTree:
+            QgsMessageLog.logMessage(f'0', "structure")
             createdGroup = self.createPath(path)
-            layers = []
+
+            layers = [] * referenceTree[path].__len__()
+
+            QgsMessageLog.logMessage(f'1', "structure")
             self.getTocLayers(layers, root, referenceTree[path])
+            QgsMessageLog.logMessage(f'2', "structure")
             self.moveLayersToGroup(layers, createdGroup)
