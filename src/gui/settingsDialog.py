@@ -1,6 +1,9 @@
 import os
+import tempfile
+import traceback
 
 from qgis.core import QgsProject, QgsMessageLog
+from qgis.core import Qgis
 from qgis.PyQt import uic, QtWidgets
 from qgis.PyQt.QtWidgets import QStackedWidget, QDialogButtonBox, QListWidget, QPushButton, QFileDialog, QMessageBox
 from ..gui.settingsStructurePageWidget import SettingsStructurePageWidget
@@ -51,13 +54,13 @@ class SettingsDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def onImportButtonClicked(self):
         homePath = self.project.homePath()
-        filepath, _ = QFileDialog.getOpenFileName(self, 'Import configuration file...', homePath, '*.wpc')
+        filepath, _ = QFileDialog.getOpenFileName(self, 'Import configuration file', homePath, '*.wpc')
 
         if filepath:
             ret = QMessageBox.question(
                 self,
                 "Import confirmation",
-                f'All current tags, properties and other settings will be replaced. Continue?',
+                f'All tags and properties will be replaced. Confirm?',
                 QMessageBox.Yes | QMessageBox.No,
                 QMessageBox.No
             )
@@ -65,12 +68,29 @@ class SettingsDialog(QtWidgets.QDialog, FORM_CLASS):
             if ret == QMessageBox.No:
                 return
             
+            def onStylePropertyFound():
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Question)
+                msgBox.setWindowTitle('Import confirmation')
+                msgBox.setText('The import file contains style properties. You can choose a folder to store the style files or use a temporary one. How to proceed?')
+                msgBox.addButton(QPushButton('Choose folder...'), QMessageBox.ButtonRole.YesRole)
+                msgBox.addButton(QPushButton('Use temporary'), QMessageBox.ButtonRole.YesRole)
+                ret = msgBox.exec_()
+
+                if ret == 0:
+                    choosenFolder = QFileDialog.getExistingDirectory(self, 'Folder to save styles', homePath)
+                    if choosenFolder is not None:
+                        return choosenFolder
+
+                return tempfile.TemporaryDirectory().name
+
             try:
-                self.settingsManager.importFromFile(filepath)
+                self.settingsManager.importFromFile(filepath, onStylePropertyFound)
                 self.tagsPage.initialize()
                 self.propertiesPage.initialize()
                 self.structurePage.initialize()
             except Exception as e:
+                QgsMessageLog.logMessage(str(traceback.format_exc()), 'Webmap Utilities Plugin', Qgis.MessageLevel.Critical)
                 QMessageBox.critical(self, "Error", "Import failed. File content seems invalid.")
 
     def onExportButtonClicked(self):

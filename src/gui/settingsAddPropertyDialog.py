@@ -1,6 +1,5 @@
 import os
 
-from qgis.core import QgsMessageLog
 from qgis.PyQt import uic, QtWidgets
 from qgis.PyQt.QtGui import QDoubleValidator
 from qgis.PyQt.QtWidgets import QMessageBox, QLineEdit, QComboBox, QCheckBox, QListWidget, QPushButton, QListWidgetItem, QGroupBox
@@ -58,7 +57,7 @@ class SettingsAddPropertyDialog(QtWidgets.QDialog, FORM_CLASS):
           self.addListItem(v)
       else:
         self.validValuesGroup.setChecked(False)
-      QgsMessageLog.logMessage(str(self.previousProperty.isDefault), "hahah")
+
       self.nameEditWidget.setEnabled(True and not self.previousProperty.isDefault)
       self.descrEditWidget.setEnabled(True and not self.previousProperty.isDefault)
       self.typeComboWidget.setEnabled(False)

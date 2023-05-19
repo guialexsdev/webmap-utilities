@@ -23,9 +23,8 @@
 """
 import math
 import os.path
-import sys
 
-from qgis.core import QgsProject, QgsExpressionContextUtils, QgsMessageLog
+from qgis.core import QgsProject, QgsExpressionContextUtils
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
@@ -37,7 +36,6 @@ from .src.expressions.visibilityControlExpressions import *
 from .src.utils.layerTreeOrganizer import LayerTreeOrganizer
 from .src.model.variable import Variable
 from .src.database.settingsManager import SettingsManager
-from .src.gui.layerVisibilityDialog import LayerVisibilityDialog
 from .src.gui.settingsDialog import SettingsDialog
 from .src.gui.eventListeners import EventListeners
 from .src.algorithms.downloadOSMByTag import DownloadOsmByTag

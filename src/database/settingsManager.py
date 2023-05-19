@@ -1,9 +1,14 @@
+import os
+import zipfile
+import json
+import tempfile
+from pathlib import Path
+from qgis.core import Qgis
+from qgis.core import QgsProject, QgsExpressionContextUtils, QgsMessageLog
 from ..model.variable import Variable
 from ..database.variablesManager import VariablesManager
 from ..model.property import PROPERTY_DATA_TYPE, Property
 from ..model.settings import Settings
-from qgis.core import QgsProject, QgsExpressionContextUtils
-import json
 
 class SettingsManager:
     PROJECT_SETTINGS_VAR_KEY = 'webmap_settings'
@@ -66,6 +71,13 @@ class SettingsManager:
         self.settings.removeProperties(properties)
         self.variablesManager.removeByProperties(properties)
 
+    # Every plugin's data is stored in project variables environment.
+    def persistToProject(self, project: QgsProject):
+        jsonStr = json.dumps(self.settings, cls=DefaultEncoder)
+        QgsExpressionContextUtils.setProjectVariable(project, SettingsManager.PROJECT_SETTINGS_VAR_KEY, jsonStr)
+        self.variablesManager.persistToProject(project)
+
+    # Loads plugin data from project environment.
     def loadFromProject(project: QgsProject):
         scope = QgsExpressionContextUtils.projectScope(project)
 
@@ -78,29 +90,90 @@ class SettingsManager:
         else:
             return None
 
+    # Export to a file with extension .wpc (Webmap Plugin Configuration)
     def exportToFile(self, filepath: str):
-        file = open(filepath, "w")
+        name = Path(filepath).name
+        settingsFile = filepath.replace(name, 'settings.json')
+
+        # Writing settings.json with all properties, tags etc.
+        file = open(settingsFile, "w")
         dump = {
             'settings': self.settings,
             'variables': self.variablesManager.variables
         }
-        
         file.write(json.dumps(dump, cls=DefaultEncoder))
         file.close()
 
-    def importFromFile(self, filepath: str):
-        file = open(filepath, "r")
-        jsonObj = json.loads(file.read())
+        # Creating a list of files to compress later
+        vars  = self.variablesManager.getByProperty('_style')
+        files = list(map(lambda x: x.value, vars))
+        files.append(settingsFile)
+        
+        # Now compressing...
+        self.compress(set(files), filepath)
 
-        self.settings = Settings.fromDict(jsonObj['settings'])
-        self.variablesManager.variables = [Variable.fromDict(jsonObj[varName]) for varName in jsonObj['variables']]
-        self.variablesManager.toDelete = []
+        # Don't need settings file anymore... now everything is inside zip file.
+        os.remove(settingsFile)
+
+    # Import from a .wpc file. If some style property was found, onStylePropertyFound callback 
+    # will be called to give us a path (where styles will be stored)
+    def importFromFile(self, filepath: str, onStylePropertyFound):
+        #Uncompress in a temp folder
+        tmpFolder = tempfile.TemporaryDirectory().name
+        self.__compress(filepath, tmpFolder)
+
+        #Load setting.json at first
+        settingsFile = f'{tmpFolder}\settings.json'
+        file = open(settingsFile, 'r')
+        jsonObj = json.loads(file.read())
         file.close()
 
-    def persistToProject(self, project: QgsProject):
-        jsonStr = json.dumps(self.settings, cls=DefaultEncoder)
-        QgsExpressionContextUtils.setProjectVariable(project, SettingsManager.PROJECT_SETTINGS_VAR_KEY, jsonStr)
-        self.variablesManager.persistToProject(project)
+        #Import settings.json (properties, variables etc)
+        self.settings = Settings.fromDict(jsonObj['settings'])
+        for varName in jsonObj['variables']:
+            var = Variable.fromDict(jsonObj['variables'][varName])
+            self.variablesManager.variables[varName] = var
+        self.variablesManager.toDelete = []
+
+        #All lines below handles QML files. Needs a refactoring!!
+        extractedQmlFiles = [f for f in os.listdir(tmpFolder) if f.lower().endswith('.qml')]
+
+        if extractedQmlFiles.__len__() > 0:
+            stylesFolder = onStylePropertyFound()
+
+            if stylesFolder is not None:
+                #Yeah... a second terrible call to uncompress. TODO: remove it, please!
+                self.__uncompress(filepath, stylesFolder)
+                os.remove(f'{stylesFolder}\settings.json')
+            else:
+                stylesFolder = tmpFolder
+
+            for varName in self.variablesManager.variables:
+                var = self.variablesManager.variables[varName]
+
+                if var.prop == '_style':
+                    oldQmlName = Path(var.value).name
+                    var.value = f'{stylesFolder}\{oldQmlName}' if oldQmlName in extractedQmlFiles else ''
+
+    def __compress(self, files: list[str], zipName: str):
+        compression = zipfile.ZIP_DEFLATED
+        zf = zipfile.ZipFile(zipName, mode="w")
+
+        try:
+            for file in files:
+                name = Path(file).name
+                zf.write(file, name, compress_type=compression)
+        except Exception as e:
+            QgsMessageLog.logMessage(str(e), 'Webmap Utilities Plugin', Qgis.MessageLevel.Critical)
+        finally:
+            zf.close()
+
+    def __uncompress(self, zipFile: str, folder: str):
+        try:
+            with zipfile.ZipFile(zipFile, 'r') as zipRef:
+                zipRef.extractall(folder)
+        except Exception as e:
+            QgsMessageLog.logMessage(str(e), 'Webmap Utilities Plugin', Qgis.MessageLevel.Critical)
 
 class DefaultEncoder(json.JSONEncoder):
   def default(self, o):

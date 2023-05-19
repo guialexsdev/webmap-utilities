@@ -1,5 +1,5 @@
 from collections import namedtuple
-from qgis.core import QgsProject, QgsExpressionContextUtils, NULL, QgsMessageLog
+from qgis.core import QgsProject, QgsExpressionContextUtils, NULL
 from ..model.property import Property, WebmapPropertyEncoder
 import json
 

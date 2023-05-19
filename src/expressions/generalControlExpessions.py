@@ -1,4 +1,4 @@
-from qgis.core import qgsfunction, QgsMessageLog
+from qgis.core import qgsfunction
 from ..utils.webmapCommons import Utils
 
 @qgsfunction(args='auto', group='Webmap - General')

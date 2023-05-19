@@ -47,7 +47,7 @@ class VariablesManager:
       self.removeByVariables(deleteList)
       self.addVariables(addList)
 
-    def getByTag(self, tag: str):
+    def getByTag(self, tag: str) -> list[Variable]:
       found = []
 
       for varName in self.variables:
@@ -56,6 +56,26 @@ class VariablesManager:
           found.append(var)
       
       return found
+
+    def getByProperty(self, prop: str) -> list[Variable]:
+      found = []
+
+      for varName in self.variables:
+        var = self.variables[varName]
+        if var.prop == prop:
+          found.append(var)
+      
+      return found
+
+    def tagHasProperties(self, tag, properties: list[str]) -> bool:
+      vars = self.getByTag(tag)
+      varsProperties = list(map(lambda x: x.prop, vars))
+      
+      for prop in properties:
+        if prop not in varsProperties:
+          return False
+      
+      return True
 
     def removeByVariables(self, varNames: list[str]):
       for name in varNames:

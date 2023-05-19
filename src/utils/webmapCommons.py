@@ -1,4 +1,4 @@
-from qgis.core import QgsExpressionContextUtils, QgsExpressionContext, QgsProject, QgsMapLayer, NULL, QgsMapLayer, QgsMessageLog
+from qgis.core import QgsExpressionContextUtils, QgsExpressionContext, QgsProject, QgsMapLayer, NULL, QgsMapLayer
 from ..model.settings import TAG_IDENTIFY_MODE, Settings
 from ..database.settingsManager import SettingsManager
 from ..model.variable import Variable

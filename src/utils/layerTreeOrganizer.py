@@ -26,14 +26,10 @@ class LayerTreeOrganizer:
         root = QgsProject.instance().layerTreeRoot()
         index = 0
 
-        QgsMessageLog.logMessage(f'LEN: {layers.__len__()}', "structure")
         for layer in layers:
-            QgsMessageLog.logMessage(f'-------> Layer: {str(layer.name())}', "structure")
             treeLayer = root.findLayer(layer.id())
-            QgsMessageLog.logMessage(f'treeLayer: {str(treeLayer.name())}', "structure")
             treeLayerClone = treeLayer.clone()
             parent: QgsLayerTreeNode = treeLayer.parent()
-            QgsMessageLog.logMessage(f'Parent: {str(parent.name())}', "structure")
 
             group.insertChildNode(index, treeLayerClone)
             parent.removeChildNode(treeLayer)
@@ -97,12 +93,8 @@ class LayerTreeOrganizer:
         root = QgsProject.instance().layerTreeRoot()
 
         for path in referenceTree:
-            QgsMessageLog.logMessage(f'0', "structure")
             createdGroup = self.createPath(path)
-
             layers = [] * referenceTree[path].__len__()
 
-            QgsMessageLog.logMessage(f'1', "structure")
             self.getTocLayers(layers, root, referenceTree[path])
-            QgsMessageLog.logMessage(f'2', "structure")
             self.moveLayersToGroup(layers, createdGroup)

@@ -5,45 +5,71 @@ Group : Webmap Utilities
 With QGIS : 32806
 """
 
-from qgis.core import QgsProcessingContext, QgsProcessing, QgsProject, QgsExpressionContextUtils, QgsMessageLog
+from qgis.core import QgsProcessingContext, QgsProcessing, QgsProject, QgsExpressionContextUtils
 from qgis.core import QgsProcessingAlgorithm
 from qgis.core import QgsProcessingMultiStepFeedback
 from qgis.core import QgsProcessingParameterCrs
 from qgis.core import QgsProcessingParameterExtent
+from qgis.core import QgsProcessingParameterEnum
 import processing
 
 from ..database.settingsManager import SettingsManager
 from ..model.variable import Variable
 
 class DownloadOsmByTag(QgsProcessingAlgorithm):
+    def __init__(self):
+        super().__init__()
+
+        settingsManager = SettingsManager.loadFromProject(QgsProject.instance())
+        self.variablesManager = settingsManager.variablesManager
+        self.settings = settingsManager.settings
+        self.tagsToDownload = []
+
     def initAlgorithm(self, config=None):
         self.addParameter(QgsProcessingParameterCrs('crs', 'CRS', defaultValue=QgsProject.instance().crs().authid()))
         self.addParameter(QgsProcessingParameterExtent('extent', 'Extent', defaultValue=None))
 
+        for tag in self.settings.tags:
+            if self.variablesManager.tagHasProperties(tag, ['_osm_key','_osm_values','_osm_type']):
+                self.tagsToDownload.append(tag)
+
+        self.addParameter(
+            QgsProcessingParameterEnum(
+                'tags', 
+                'Tags',
+                options=self.tagsToDownload, 
+                allowMultiple=True, 
+                usesStaticStrings=False, 
+                defaultValue=list(range(self.tagsToDownload.__len__()))
+            )
+        )
+
     def processAlgorithm(self, parameters, context: QgsProcessingContext, model_feedback):
         # Use a multi-step feedback, so that individual child algorithm progress reports are adjusted for the
         # overall progress through the model
-        project         = QgsProject.instance()
-        projectScope    = QgsExpressionContextUtils.projectScope(project)
-        settingsManager = SettingsManager.loadFromProject(QgsProject.instance())
-        settings        = settingsManager.settings
-
-        queries = []
-
-        for tag in settings.tags:
+        feedback     = QgsProcessingMultiStepFeedback(5*queries.__len__(), model_feedback)
+        project      = QgsProject.instance()
+        projectScope = QgsExpressionContextUtils.projectScope(project)
+        queries      = []
+        
+        for tag in self.tagsToDownload:
             keyVar    = Variable.formatVariableName(tag, '_osm_key')
             valuesVar = Variable.formatVariableName(tag, '_osm_values')
             typeVar   = Variable.formatVariableName(tag, '_osm_type')
 
-            if projectScope.hasVariable(keyVar) and projectScope.hasVariable(typeVar):
-                values = str(projectScope.variable(valuesVar)).replace(';',',')
-                keys   = [str(projectScope.variable(keyVar))] * values.split(',').__len__()
-                type   = str(projectScope.variable(typeVar))
+            if projectScope.hasVariable(keyVar):
+                if projectScope.hasVariable(typeVar):
+                    values = str(projectScope.variable(valuesVar)).replace(';',',')
+                    keys   = [str(projectScope.variable(keyVar))] * values.split(',').__len__()
+                    type   = str(projectScope.variable(typeVar))
 
-                queries.append((tag, ','.join(keys), values, type))
+                    queries.append((tag, ','.join(keys), values, type))
+                else:
+                    feedback.pushWarning(f"Tag {tag} doesn't have property [_osm_type] and will not be downloaded.")
+            else:
+                feedback.pushWarning(f"Tag {tag} doesn't have property [_osm_key] and will not be downloaded.")
 
-        feedback = QgsProcessingMultiStepFeedback(5*queries.__len__(), model_feedback)
-        results = {}
+        results  = {}
         context.setDefaultEncoding('utf8')
 
         step = 0
@@ -68,7 +94,7 @@ class DownloadOsmByTag(QgsProcessingAlgorithm):
             feedback.setCurrentStep(step)
             if feedback.isCanceled():
                 return {}
-
+            
             # Download file
             alg_params = {
                 'DATA': '',
