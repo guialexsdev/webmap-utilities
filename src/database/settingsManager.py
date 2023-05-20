@@ -110,7 +110,7 @@ class SettingsManager:
         files.append(settingsFile)
         
         # Now compressing...
-        self.compress(set(files), filepath)
+        self.__compress(set(files), filepath)
 
         # Don't need settings file anymore... now everything is inside zip file.
         os.remove(settingsFile)
@@ -120,7 +120,7 @@ class SettingsManager:
     def importFromFile(self, filepath: str, onStylePropertyFound):
         #Uncompress in a temp folder
         tmpFolder = tempfile.TemporaryDirectory().name
-        self.__compress(filepath, tmpFolder)
+        self.__uncompress(filepath, tmpFolder)
 
         #Load setting.json at first
         settingsFile = f'{tmpFolder}\settings.json'

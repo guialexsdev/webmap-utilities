@@ -59,9 +59,12 @@ class SettingsTagsPageWidget(QtWidgets.QWidget, FORM_CLASS):
     def addTagTreeItem(self, tag: str):
         item = QTreeWidgetItem(self.tagTreeWidget)
         item.setText(0, tag)
-
-        self.tagTreeWidget.addTopLevelItem(item)
         item.setExpanded(True)
+        item.setSelected(True)
+        self.tagTreeWidget.setCurrentItem(item)
+        self.tagTreeWidget.scrollTo(self.tagTreeWidget.indexFromItem(item))
+        self.tagTreeWidget.addTopLevelItem(item)
+
         return item
     
     def addPropertyTreeItem(self, parent: QTreeWidgetItem, propertyName: str, propertyValue: str):

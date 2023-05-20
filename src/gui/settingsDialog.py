@@ -60,21 +60,21 @@ class SettingsDialog(QtWidgets.QDialog, FORM_CLASS):
             ret = QMessageBox.question(
                 self,
                 "Import confirmation",
-                f'All tags and properties will be replaced. Confirm?',
+                f'All tags, properties and layers arrangement structure will be replaced. Confirm?',
                 QMessageBox.Yes | QMessageBox.No,
                 QMessageBox.No
             )
 
             if ret == QMessageBox.No:
                 return
-            
+
             def onStylePropertyFound():
                 msgBox = QMessageBox()
                 msgBox.setIcon(QMessageBox.Question)
                 msgBox.setWindowTitle('Import confirmation')
                 msgBox.setText('The import file contains style properties. You can choose a folder to store the style files or use a temporary one. How to proceed?')
                 msgBox.addButton(QPushButton('Choose folder...'), QMessageBox.ButtonRole.YesRole)
-                msgBox.addButton(QPushButton('Use temporary'), QMessageBox.ButtonRole.YesRole)
+                msgBox.addButton(QPushButton('Use a temporary folder'), QMessageBox.ButtonRole.YesRole)
                 ret = msgBox.exec_()
 
                 if ret == 0:

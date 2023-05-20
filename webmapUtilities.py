@@ -276,6 +276,8 @@ class WebmapUtilities:
                 if currentLayerTag == tag:
                     value = QgsExpressionContextUtils.projectScope(project).variable(Variable.formatVariableName(tag, '_style'))
                     layer.loadNamedStyle(value)
+        
+        self.iface.mapCanvas().refreshAllLayers()
 
     def runApplyStructure(self):
         ret = QMessageBox.question(
@@ -291,6 +293,7 @@ class WebmapUtilities:
         
         settingsManager = SettingsManager.loadFromProject(QgsProject.instance())
         LayerTreeOrganizer(self.iface, settingsManager).applyStructure(settingsManager.settings.structure)
+        self.iface.mapCanvas().refreshAllLayers()
 
     def contextMenuAboutToShow(self, menu):
         EventListeners.onContextMenuAboutToShow(self.iface, menu)

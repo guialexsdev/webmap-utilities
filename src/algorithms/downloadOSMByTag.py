@@ -47,7 +47,7 @@ class DownloadOsmByTag(QgsProcessingAlgorithm):
     def processAlgorithm(self, parameters, context: QgsProcessingContext, model_feedback):
         # Use a multi-step feedback, so that individual child algorithm progress reports are adjusted for the
         # overall progress through the model
-        feedback     = QgsProcessingMultiStepFeedback(5*queries.__len__(), model_feedback)
+        feedback     = QgsProcessingMultiStepFeedback(5*self.tagsToDownload.__len__(), model_feedback)
         project      = QgsProject.instance()
         projectScope = QgsExpressionContextUtils.projectScope(project)
         queries      = []

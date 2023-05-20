@@ -106,7 +106,9 @@ def controlVisibilityByPercentilesArray(attribute, percentiles, feature, parent,
             attrCollection = []
 
             fromMinOffset = currentZoom - minZoom
-            percentile = _percentiles[fromMinOffset] if fromMinOffset < len(_percentiles) else 100
+            percentileIndex = Utils.boundValue(fromMinOffset, 0, len(_percentiles) - 1)
+            percentile = _percentiles[percentileIndex]
+            
             percentileVar = f'_layer_percentile_{percentile}'
             percentileResult = context.cachedValue(percentileVar)
 

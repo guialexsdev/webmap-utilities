@@ -1,5 +1,6 @@
 import os
 
+from qgis.core import QgsMessageLog
 from qgis.PyQt import uic, QtWidgets, QtCore
 from qgis.PyQt.QtCore import QPoint, Qt
 from qgis.PyQt.QtWidgets import QTableWidget, QTableWidgetItem, QTextBrowser, QHeaderView, QMessageBox, QAbstractItemView
@@ -33,11 +34,8 @@ class SettingsPropertiesPageWidget(QtWidgets.QWidget, FORM_CLASS):
         self.initialize()
 
     def initialize(self):
-        self.propertiesTableWidget.clear()
-        self.propertiesTableWidget.clearContents()            
-        self.propertiesTableWidget.clearSelection()
-        self.helpBrowser.clear()
-
+        self.clearWidgets()
+    
         self.propertiesTableWidget.setHorizontalHeaderItem(0, QTableWidgetItem('Name'))
         self.propertiesTableWidget.setHorizontalHeaderItem(1, QTableWidgetItem('Type'))
         self.propertiesTableWidget.setHorizontalHeaderItem(2, QTableWidgetItem('Is list?'))
@@ -56,6 +54,15 @@ class SettingsPropertiesPageWidget(QtWidgets.QWidget, FORM_CLASS):
         if row > 0:
             self.propertiesTableWidget.clearSelection()
             self.helpBrowser.clear()
+
+    def clearWidgets(self):
+        self.propertiesTableWidget.clear()
+        self.propertiesTableWidget.clearContents()            
+        self.propertiesTableWidget.clearSelection()
+        self.helpBrowser.clear()
+
+        for row in range(self.propertiesTableWidget.rowCount(),-1,-1):
+            self.propertiesTableWidget.removeRow(row)
 
     def addPropertyTableItem(self, property: Property, row = None):
         self.propertiesTableWidget.setSortingEnabled(False)
@@ -140,7 +147,6 @@ class SettingsPropertiesPageWidget(QtWidgets.QWidget, FORM_CLASS):
         self.propertiesTableWidget.setSortingEnabled(False)
         listOfPropertyNames = list(map(lambda row: self.propertiesTableWidget.item(row, 0).text(), rows))
         listWithoutDefaultProps = list(filter(lambda x: not self.settingsManager.settings.properties[x].isDefault ,listOfPropertyNames))
-        self.settingsManager.removeProperties(listWithoutDefaultProps)
         
         #Rows should be reversed in order to remove properly all table cells
         listOfRows = list(rows)
@@ -150,6 +156,8 @@ class SettingsPropertiesPageWidget(QtWidgets.QWidget, FORM_CLASS):
            propName = self.propertiesTableWidget.item(row, 0).text()
            if not self.settingsManager.settings.properties[propName].isDefault:
             self.propertiesTableWidget.removeRow(row)
+        
+        self.settingsManager.removeProperties(listWithoutDefaultProps)
 
         self.propertiesTableWidget.itemSelectionChanged.connect(self.itemSelectionChanged)
         self.helpBrowser.clear()
