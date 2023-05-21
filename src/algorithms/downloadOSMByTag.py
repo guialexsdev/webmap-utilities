@@ -54,19 +54,6 @@ class DownloadOsmByTag(QgsProcessingAlgorithm):
         queryBuilders: list[OSMQueryBuilder] = []
 
         for tag in self.tagsToDownload:
-<<<<<<< HEAD
-            keyVar    = Variable.formatVariableName(tag, '_osm_key')
-            valuesVar = Variable.formatVariableName(tag, '_osm_values')
-            typeVar   = Variable.formatVariableName(tag, '_osm_type')
-
-            if projectScope.hasVariable(keyVar):
-                if projectScope.hasVariable(typeVar):
-                    values = str(projectScope.variable(valuesVar)).replace(';',',')
-                    keys   = [str(projectScope.variable(keyVar))] * values.split(',').__len__()
-                    type   = str(projectScope.variable(typeVar))
-
-                    queries.append((tag, ','.join(keys), values, type))
-=======
             osmQueryVar = Variable.formatVariableName(tag, '_osm_query')
             geomTypeVar = Variable.formatVariableName(tag, '_geometry_type')
 
@@ -89,7 +76,6 @@ class DownloadOsmByTag(QgsProcessingAlgorithm):
 
                     if builder.items.__len__() > 0:
                         queryBuilders.append(builder)
->>>>>>> faed49e1ed2bd41c922892b795663dca6f8c853d
                 else:
                     feedback.pushWarning(f"Tag {tag} doesn't have property [_osm_query] and will not be downloaded.")
             else:
