@@ -1,4 +1,5 @@
 import os
+from textwrap import dedent
 import zipfile
 import json
 import tempfile
@@ -23,19 +24,33 @@ class SettingsManager:
         self.variablesManager = VariablesManager() if variablesManager is None else variablesManager
         
     def defaultProperties(self):
+        geometryTypes = ['points','lines','multilinestrings','multipolygons','other']
+
         return [
-            Property('_zoom_min',              'Minimum zoom level',                           PROPERTY_DATA_TYPE.NUMBER, False, None, True),
-            Property('_zoom_max',              'Maximum zoom level',                           PROPERTY_DATA_TYPE.NUMBER, False, None, True),
-            Property('_label_zoom_min',        'Minimum zoom level for labels',                PROPERTY_DATA_TYPE.NUMBER, False, None, True),
-            Property('_label_size_min',        'Minimum label size',                           PROPERTY_DATA_TYPE.NUMBER, False, None, True),
-            Property('_label_size_max',        'Maximum label size',                           PROPERTY_DATA_TYPE.NUMBER, False, None, True),
-            Property('_label_size_increment',  'Label size increment per zoom increment',      PROPERTY_DATA_TYPE.NUMBER, False, None, True),
-            Property('_symbol_zoom_min',       'Minimum zoom level for symbols',               PROPERTY_DATA_TYPE.NUMBER, False, None, True),
-            Property('_symbol_size_min',       'Minimum symbol size',                          PROPERTY_DATA_TYPE.NUMBER, False, None, True),
-            Property('_symbol_size_max',       'Maximum symbol size',                          PROPERTY_DATA_TYPE.NUMBER, False, None, True),
-            Property('_symbol_size_increment', 'Symbol size increment per zoom increment',     PROPERTY_DATA_TYPE.NUMBER, False, None, True),
-            Property('_symbol_color_sequence', 'Symbol colors per zoom',                       PROPERTY_DATA_TYPE.STRING, True,  None, True),
-            Property('_style',                 'Style (qml file) to be automatically applied', PROPERTY_DATA_TYPE.FILE,   False, None, True)
+            Property('_zoom_min', 'Minimum zoom level', PROPERTY_DATA_TYPE.NUMBER, False, None, True),
+            Property('_zoom_max', 'Maximum zoom level', PROPERTY_DATA_TYPE.NUMBER, False, None, True),
+            Property('_geometry_type', 'Geometry type', PROPERTY_DATA_TYPE.STRING, False, geometryTypes, True),
+            Property('_label_zoom_min', 'Minimum zoom level for labels', PROPERTY_DATA_TYPE.NUMBER, False, None, True),
+            Property('_label_size_min', 'Minimum label size', PROPERTY_DATA_TYPE.NUMBER, False, None, True),
+            Property('_label_size_max', 'Maximum label size', PROPERTY_DATA_TYPE.NUMBER, False, None, True),
+            Property('_label_size_increment', 'Label size increment per zoom increment', PROPERTY_DATA_TYPE.NUMBER, False, None, True),
+            Property('_symbol_zoom_min', 'Minimum zoom level for symbols', PROPERTY_DATA_TYPE.NUMBER, False, None, True),
+            Property('_symbol_size_min', 'Minimum symbol size', PROPERTY_DATA_TYPE.NUMBER, False, None, True),
+            Property('_symbol_size_max', 'Maximum symbol size', PROPERTY_DATA_TYPE.NUMBER, False, None, True),
+            Property('_symbol_size_increment', 'Symbol size increment per zoom increment', PROPERTY_DATA_TYPE.NUMBER, False, None, True),
+            Property('_symbol_color_sequence', 'Symbol colors per zoom', PROPERTY_DATA_TYPE.STRING, True, None, True),
+            Property('_style', 'Style (qml file) to be automatically applied', PROPERTY_DATA_TYPE.FILE, False, None, True),
+            Property(
+                '_osm_query', 
+                dedent(
+                    """
+                    OSM query to download vector layer of tag. Only one key-value pair per list entry is permitted.
+                    Format: <key>=<value>
+                    Example: place=city
+                    """
+                ), 
+                PROPERTY_DATA_TYPE.STRING, True, None, True
+            )
         ]
 
     def cloneTagProperties(self, tagToBeCloned, newTag):
