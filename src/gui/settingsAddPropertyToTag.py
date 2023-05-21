@@ -59,6 +59,7 @@ class SettingAddPropertyToTag(QtWidgets.QDialog, FORM_CLASS):
                 for value in selectedVariable.value.split(';'):
                     self.addListItem(value)
             else:
+                self.valueComboBoxWidget.setCurrentText(selectedVariable.value)
                 self.valueEditWidget.setText(selectedVariable.value) 
 
         if self.selectedProperty.type == 'number':
