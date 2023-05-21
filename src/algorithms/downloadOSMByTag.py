@@ -60,10 +60,10 @@ class DownloadOsmByTag(QgsProcessingAlgorithm):
             if projectScope.hasVariable(keyVar):
                 if projectScope.hasVariable(typeVar):
                     values = str(projectScope.variable(valuesVar)).replace(';',',')
-                    keys   = str(projectScope.variable(keyVar)).replace(';',',')#[str(projectScope.variable(keyVar))] * values.split(',').__len__()
+                    keys   = [str(projectScope.variable(keyVar))] * values.split(',').__len__()
                     type   = str(projectScope.variable(typeVar))
-                    #','.join(keys)
-                    queries.append((tag, keys, values, type))
+
+                    queries.append((tag, ','.join(keys), values, type))
                 else:
                     feedback.pushWarning(f"Tag {tag} doesn't have property [_osm_type] and will not be downloaded.")
             else:
