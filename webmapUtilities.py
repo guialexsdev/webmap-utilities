@@ -211,12 +211,15 @@ class WebmapUtilities:
             self.runOSMDownloader
         )
 
+        self.toolbar.addSeparator()
+
         self.addButtonToCustomToolbar(
             'Shaded Relief Creator',
             ':/icons/relief_creator.png',
             self.runShadedReliefCreator
         )
 
+        self.toolbar.addSeparator()
         self.addZoomLevelWidget()
 
         QgsProject().instance().viewSettings().mapScalesChanged.connect(self.addZoomLevelWidget)
@@ -238,6 +241,12 @@ class WebmapUtilities:
         viewSettings.setUseProjectScales(True)
 
     def runOSMDownloader(self):
+        settingsManager = SettingsManager.loadFromProject(QgsProject().instance())
+
+        if settingsManager is None:
+            QMessageBox.critical(self.iface.mainWindow(), "Error", "Project not initialized. Click on the plug icon first to initialize the project.")
+            return
+
         alg: DownloadOsmByTag = DownloadOsmByTag()
         processing.execAlgorithmDialog(alg)
 

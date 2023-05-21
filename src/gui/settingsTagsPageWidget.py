@@ -55,6 +55,8 @@ class SettingsTagsPageWidget(QtWidgets.QWidget, FORM_CLASS):
             self.identifyStrategyComboWidget.setCurrentIndex(0)
         else:
             self.identifyStrategyComboWidget.setCurrentIndex(1)
+        
+        self.tagTreeWidget.collapseAll()
 
     def addTagTreeItem(self, tag: str):
         item = QTreeWidgetItem(self.tagTreeWidget)

@@ -79,10 +79,6 @@ class LayerTreeOrganizer:
                     arr.insert(indexMatchedTag, child.layer())
 
     def getStructure(self):
-        #selectedNodes = self.iface.layerTreeView().selectedLayerNodes()
-        #root = selectedNodes[0] if selectedNodes.__len__() > 0 else QgsProject.instance().layerTreeRoot()
-        #rootName = root.name() if root.name() is not None else 'root'
-
         tags = self.settingsManager.settings.tags
 
         tree = {}
