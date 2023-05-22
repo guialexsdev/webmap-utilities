@@ -24,7 +24,7 @@
 import math
 import os.path
 
-from qgis.core import QgsProject, QgsExpressionContextUtils
+from qgis.core import QgsProject, QgsExpressionContextUtils, QgsMessageLog
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
@@ -75,7 +75,7 @@ class WebmapUtilities:
         # Declare instance attributes
         self.actions = []
         self.menu = '&Webmap Utilities'
-
+        self.tagRequiredActions: list[QAction] = []
         self.zoomLevelComboWidget = None
 
     def createToolbar(self, name):
@@ -83,89 +83,17 @@ class WebmapUtilities:
             self.toolbar: QToolBar = self.iface.addToolBar(name)
             self.toolbar.setObjectName("WebmapToolbar")
 
-    def addButtonToCustomToolbar(self, text, iconPath, callback):
+    def addButtonToCustomToolbar(self, text, iconPath, enabled, callback):
         icon = QIcon(iconPath)
         action = QAction(icon, text, self.iface.mainWindow())
+        action.setEnabled(enabled)
         action.triggered.connect(callback)
         self.toolbar.addAction(action)
         self.actions.append(action)
-
+        return action
+    
     def addWidgetToCustomToolbar(self, widget):
         self.actions.append(self.toolbar.addWidget(widget))
-
-    def addAction(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
-        """Add a toolbar icon to the toolbar.
-
-        :param icon_path: Path to the icon for this action. Can be a resource
-            path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
-        :type icon_path: str
-
-        :param text: Text that should be shown in menu items for this action.
-        :type text: str
-
-        :param callback: Function to be called when the action is triggered.
-        :type callback: function
-
-        :param enabled_flag: A flag indicating if the action should be enabled
-            by default. Defaults to True.
-        :type enabled_flag: bool
-
-        :param add_to_menu: Flag indicating whether the action should also
-            be added to the menu. Defaults to True.
-        :type add_to_menu: bool
-
-        :param add_to_toolbar: Flag indicating whether the action should also
-            be added to the toolbar. Defaults to True.
-        :type add_to_toolbar: bool
-
-        :param status_tip: Optional text to show in a popup when mouse pointer
-            hovers over the action.
-        :type status_tip: str
-
-        :param parent: Parent widget for the new action. Defaults None.
-        :type parent: QWidget
-
-        :param whats_this: Optional text to show in the status bar when the
-            mouse pointer hovers over the action.
-
-        :returns: The action that was created. Note that the action is also
-            added to self.actions list.
-        :rtype: QAction
-        """
-
-        icon = QIcon(icon_path)
-        action = QAction(icon, text, parent)
-        action.triggered.connect(callback)
-        action.setEnabled(enabled_flag)
-
-        if status_tip is not None:
-            action.setStatusTip(status_tip)
-
-        if whats_this is not None:
-            action.setWhatsThis(whats_this)
-
-        if add_to_toolbar:
-            # Adds plugin icon to Plugins toolbar
-            self.iface.addToolBarIcon(action)
-
-        if add_to_menu:
-            self.iface.addPluginToMenu(
-                self.menu,
-                action)
-
-        self.actions.append(action)
-
-        return action
 
     def initGui(self):
         self.toolbar = None
@@ -180,42 +108,55 @@ class WebmapUtilities:
         if self.toolbar is None:
             self.createToolbar("Webmap Utilities Toolbar")
 
+        isProjectInitialized = self.isProjectInitialized()
+        QgsMessageLog.logMessage(str(isProjectInitialized), "Webmap Plugin Flow")
+
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         self.addButtonToCustomToolbar(
-            'Configure Project',
+            'Initialize Project',
             ':/icons/configure_project.png',
+            True,
             self.runConfigureProject
         )
 
-        self.addButtonToCustomToolbar(
+        tagRequiredAction = self.addButtonToCustomToolbar(
             'Settings',
             ':/icons/settings.png',
+            isProjectInitialized,
             self.runSettingsDialog
         )
+        self.tagRequiredActions.append(tagRequiredAction)
 
-        self.addButtonToCustomToolbar(
+        tagRequiredAction = self.addButtonToCustomToolbar(
             'Apply Style',
             ':/icons/apply_style.png',
+            isProjectInitialized,
             self.runApplyStyleDialog
         )
+        self.tagRequiredActions.append(tagRequiredAction)
 
-        self.addButtonToCustomToolbar(
+        tagRequiredAction = self.addButtonToCustomToolbar(
             'Apply Structure',
             ':/icons/apply_structure.png',
+            isProjectInitialized,
             self.runApplyStructure
         )
+        self.tagRequiredActions.append(tagRequiredAction)
 
-        self.addButtonToCustomToolbar(
+        tagRequiredAction = self.addButtonToCustomToolbar(
             'OSM Downloader',
             ':/icons/osm.png',
+            isProjectInitialized,
             self.runOSMDownloader
         )
+        self.tagRequiredActions.append(tagRequiredAction)
 
         self.toolbar.addSeparator()
 
         self.addButtonToCustomToolbar(
             'Shaded Relief Creator',
             ':/icons/relief_creator.png',
+            True,
             self.runShadedReliefCreator
         )
 
@@ -223,6 +164,8 @@ class WebmapUtilities:
         self.addZoomLevelWidget()
 
         QgsProject().instance().viewSettings().mapScalesChanged.connect(self.addZoomLevelWidget)
+
+        self.iface.projectRead.connect(self.onProjectRead)
         self.iface.layerTreeView().contextMenuAboutToShow.connect(self.contextMenuAboutToShow)
         self.iface.currentLayerChanged.connect(self.currentLayerChanged)
 
@@ -234,11 +177,28 @@ class WebmapUtilities:
         for action in self.actions:
             self.iface.removeToolBarIcon(action)
 
-    def runConfigureProject(Self):
+    def isProjectInitialized(sef):
+        return QgsExpressionContextUtils.projectScope(QgsProject.instance()).hasVariable('webmap_settings')
+    
+    def setRequiredActionsEnabled(self, enabled):
+        for action in self.tagRequiredActions:
+            action.setEnabled(enabled)
+
+    def onProjectRead(self):
+        self.setRequiredActionsEnabled(self.isProjectInitialized())
+
+    def runConfigureProject(self):
         mercatorScales = [554678932,277339466,138669733,69334866,34667433,17333716,8666858,4333429,2166714,1083357,541678,270839,135419,67709,33854,16927,8463,4231,2115]
         viewSettings = QgsProject().instance().viewSettings()
         viewSettings.setMapScales(mercatorScales)
         viewSettings.setUseProjectScales(True)
+
+        if not self.isProjectInitialized():
+            project = QgsProject().instance()
+            settingsManager = SettingsManager()
+            settingsManager.persistToProject(project)
+
+            self.setRequiredActionsEnabled(True)
 
     def runOSMDownloader(self):
         settingsManager = SettingsManager.loadFromProject(QgsProject().instance())
@@ -263,6 +223,12 @@ class WebmapUtilities:
             pass
 
     def runApplyStyleDialog(self):
+        settingsManager = SettingsManager.loadFromProject(QgsProject().instance())
+
+        if settingsManager is None:
+            QMessageBox.critical(self.iface.mainWindow(), "Error", "Project not initialized. Click on the plug icon first to initialize the project.")
+            return
+    
         ret = QMessageBox.question(
             None,
             "Apply style confirmation",
@@ -289,6 +255,12 @@ class WebmapUtilities:
         self.iface.mapCanvas().refreshAllLayers()
 
     def runApplyStructure(self):
+        settingsManager = SettingsManager.loadFromProject(QgsProject().instance())
+
+        if settingsManager is None:
+            QMessageBox.critical(self.iface.mainWindow(), "Error", "Project not initialized. Click on the plug icon first to initialize the project.")
+            return
+    
         ret = QMessageBox.question(
             None,
             "Apply confirmation",

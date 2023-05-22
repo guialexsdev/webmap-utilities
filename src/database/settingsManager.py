@@ -20,9 +20,25 @@ class SettingsManager:
             self.settings.addOrUpdateProperties(self.defaultProperties())
         else:
             self.settings = settings
+            #A version update may create or even modify default properties, so we need to always bring updates from default properties.
+            self.updateDefaultProperties()
 
         self.variablesManager = VariablesManager() if variablesManager is None else variablesManager
         
+    def updateDefaultProperties(self):
+        defaultProperties = self.defaultProperties()
+
+        for defProp in defaultProperties:
+            if defProp.name not in self.settings.properties:
+                self.settings.properties[defProp.name] = defProp
+
+        defaulPropertiesName = list(map(lambda x: x.name, defaultProperties))
+
+        for propName in self.settings.properties:
+            prop: Property = self.settings.properties[propName]
+            if prop.isDefault and prop.name not in defaulPropertiesName:
+                prop.isDefault = False
+
     def defaultProperties(self):
         geometryTypes = ['points','lines','multilinestrings','multipolygons','other']
 

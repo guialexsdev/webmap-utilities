@@ -9,10 +9,10 @@ Encorajamos você a usar o sistema de Tags (marcação) proposto pelo projeto (v
 Aqui está uma lista de funcionalidades:
 
 * Conjunto de ferramentas para trabalhar com niveis de zoom (0 - 20) ao invés de escalas.
-* Você pode atribuir a visibilidade (nivel de zoom) de uma ou várias camadas (até mesmo grupos). 
+* Você pode atribuir a visibilidade (nivel de zoom) de uma ou várias camadas, até mesmo grupos. 
 * O plugin oferece funções para controle de visibilidade, a serem utilizadas nas opções Data Defined Override das camadas. Por exemplo: você pode querer que as cidades de determinada camada apareçam pouco a pouco, conforme o valor de um atributo que indique a população da cidade.
-* Oferecermos também funções que controlam campo numéricos (tamanho do rótulo, tamanho do símbolo, transparência). Por exemplo> você pode querer que o tamanho de um rótulo aumente uniformemente entre 7pt a 12pt, conforme o zoom vai aumentando.
-* Com o sistema de marcação (tag), fica mais fácil criar templates de reproduzir o conceito de mapas anteriores. Com alguns poucos cliques você pode:
+* Oferecermos também funções que controlam campo numéricos (tamanho do rótulo, tamanho do símbolo, transparência). Por exemplo: você pode querer que o tamanho de um rótulo aumente uniformemente entre 7pt a 12pt, conforme o zoom vai aumentando.
+* Com o sistema de marcação (tag), fica mais fácil criar templates para reproduzir o conceito de mapas anteriores. Com alguns poucos cliques você pode:
   - Re-organizar suas camadas de acordo com uma organização pré-definida.
   - Aplicar estilos (arquivos QML) para todas as camadas com tag.
   - Download automático de dados OSM de todas as as camadas com tag.
@@ -32,15 +32,21 @@ Para acessar as ferramentas, clique com o botão direito em qualquer área livre
 
 ## Breve Tutorial
 
-O sistema de marcação facilita a replicação e a padronização de mapas. Digamos que você tenha construído um mapa de determinada região e tenha gostado do resultado. Para replicar esse mapa, mas para outra região, apenas alguns clicks seriam necessários para:
+O sistema de marcação facilita a replicação e a padronização de mapas. Digamos que você tenha construído um mapa de determinada região e tenha gostado do resultado. Para replicar esse mapa em outra região, apenas alguns clicks seriam necessários para:
 
 * Automaticamente baixar todas as camadas do OSM
 * Automaticamente aplicar os estilos para todas as camadas marcadas (camadas vetorias ou raster)
 * Automaticamente organizar a árvore de camadas, na ordem correta.
 
+De maneira geral o intuito do sistema de marcação é realizar operações em lote, ou seja, em várias camadas ao mesmo tempo. Com o tempo novas funcionalidades nesse sentido serão publicadas.
+
+Uma tag nada mais é do que uma espécie de categoria, indicando do que se trata determinada camada. Cada tag pode ter uma ou mais propriedades. A tag que representa **cidades**, que é o exemplo que daremos logo adiante, poderá ter uma propriedade chamada **_style**: todas as camadas marcadas com a tag **cidades** receberiam o mesmo estilo. Outra propriedade seria a importante **_zoom_min**, ela indica a partir de qual nivel de zoom as camadas do tipo **cidades** seriam visíveis no mapa.
+
 ### Adicionando tags
 
-O sistema de tags é simples. Primeiro você define em qual categoria cai cada camada. Por exemplo, suponha que você tenha várias camadas de pontos, de diferentes fontes, representando as **cidades** de determinada região. Embora possam ter diferentes nomes e até features diferentes, todas essas camadas podem ser classificadas como sendo de um mesmo tipo, de uma mesma TAG, chamada **cidade**.
+**objetivo**: marcar algumas das nossas camadas com um tag.
+
+O sistema de tags é simples. Primeiro você define em qual categoria cairá cada camada. Por exemplo, suponha que você tenha várias camadas de pontos, de diferentes fontes, representando as **cidades** de determinada região. Embora possam ter diferentes nomes e até features diferentes, todas essas camadas podem ser classificadas como sendo de um mesmo tipo, de uma mesma TAG, chamada **cidade**.
 
 Em seguida, precisamos planejar como o plugin irá reconhecer a tag de uma camada. Atualmente isso pode ser feito de 2 formas:
 
@@ -53,29 +59,34 @@ Agora vá em ![](/images/settings.png) **Settings** e registre a tag clicando no
 
 ### Adicionando uma propriedade à TAG
 
+**objetivo**: adicionar uma propriedade à nossa tag. Posteriormente essa propriedade controlará em qual nivel de zoom as camada com a nossa tag estarão visíveis no mapa.
+
 O próximo passo é inserir algumas propriedades à tag recém criada. Propriedade é uma espécie de parâmetro para controlar alguma coisa do mapa. Por exemplo, por padrão existem as propriedades `_zoom_min` e `_zoom_max`. Elas controlam o intervalo de zoom em que sua camada será visível. Se você coloca, digamos, o valor 9 para `_zoom_min` e 10 para `_zoom_max`, isso significa que todas as features da camada serão vistas apenas nesse intervalo. Essas propriedades são globais: todas as features da sua camadas vão obedecer esses valores. Mas você pode querer que uma ou outra feature esteja visivel, por exemplo, entre o intervalo de zoom 8 e 16. Nesse caso, você pode criar `_zoom_min` e `_zoom_max` como se fossem atributos da sua camada. O plugin dará preferência aos valores individuais de cada feature.
 
 Para adicionar uma propriedade à tag, vá em ![](/images/settings.png) **Settings** -> Tags e clique com o botão direito no nome da tag. No menu, cloque em **Add Property...**. Selecione `_zoom_min`, coloque o número 9 e dê OK. Repita o procedimento para `_zoom_max`, mas colocando o valor 15 dessa vez. A ideia é que a nossa camada de cidades fique visível apenas entre o zoom 9 e 15. Mas você ainda não verá isso acontecer. Uma próxima etapada ainda é necessária.
 
 ![](/images/step_add_property.png)
 
+Você pode criar suas propriedades caso necessário. Na tela, basta cadastrá-las na tela ![](/images/settings.png) **Settings** -> Properties. Lá será possível escolher o tipo de propriedade (texto, numérico etc), ou se terá uma lista de valores associada.
+
 **Outras propriedades úteis**
 
 - `_style`: essa propriedade especifica qual estilo será automaticamente atribuído às camadas daquela tag. Vá em [Aplicando estilos automaticamente](#aplicando-estilos-automaticamente) para entender melhor.
-- `_osm_key`: Chave de pesquisa OSM. Ex: place, highway, waterway etc. Precisa co-existir com as outras propriedades OSM. Vá em [Baixando camadas vetoriais OSM](#baixando-camadas-vetoriais-osm) para entender melhor.
-- `_osm_value`: Junto com `_osm_key`, elas formam 'consulta' para baixar dados OSM. Ex: town, primary_roads, river etc. Precisa co-existir com as outras propriedades OSM.Vá em [Baixando camadas vetoriais OSM](#baixando-camadas-vetoriais-osm) para entender melhor.
-- `_osm_type`: Tipo de camada a ser baixada do OSM. Opções: points, lines, multilines to multipolygons. Precisa co-existir com as outras propriedades OSM.Vá em [Baixando camadas vetoriais OSM](#baixando-camadas-vetoriais-osm) para entender melhor.
+- `_osm_query`: Chaves e valor para a pesquisa OSM. Ex: place=city, highway=primaryetc. Vá em [Baixando camadas vetoriais OSM](#baixando-camadas-vetoriais-osm) para entender melhor.
+- `_geometry_type`: Tipo de camada vetorial que a tag representa. Opções: points, lines, multilines to multipolygons.
 
 ### Controlando uma camada vetorial
 
-Abra as propriedades da camada. Vamos trabalhar com rótulos. Antes de tudo, crie um estilo básico qualquer. Depois vá para seção **Show Label**, em **Data defined override** e depois clique em editar. O que vamos fazer aqui é adicionar um controle de visibilidade através de funções que o plugin oferece. Essas funções é que utilizam algumas das propriedades da tag, como a nossas já estudadas `_zoom_min` e `_zoom_max`.
+**objetivo**: tornar as camadas (marcadas com a nossa tag) visíveis ou não em cada nivel de zoom. No primeiro exemplo, faremos todas as feature da camada serem visíveis a partir de `_zoom_min`. Depois faremos as feature aparecerem aos poucos, quanto maior a população, mais 'cedo' aparecerá a cidade.
+
+Abra as propriedades da camada para trabalharmos com rótulos. Crie um estilo básico qualquer. Depois vá para seção **Show Label**, em **Data defined override** e depois clique em editar. O que vamos fazer aqui é adicionar um controle de visibilidade através de funções que o plugin oferece. Essas funções é que utilizam algumas das propriedades da tag, como a nossas já estudadas `_zoom_min` e `_zoom_max`.
 
 ![](/images/step_controlling_layer1.png)
 
 Todas as funções oferecidas pelo plugin estão sob as opções 'Webmap - General' e 'Webmap - Visibility'. Assim sendo, digite seguinte fórmula:
 
 ```
-controlVisibility(@zoom_level)
+controlVisibility()
 ```
 
 Clique em Aplicar e saia da tela de propriedades da camada e volte ao canvas. Vá navegando, aproximando e afastando o zoom e verifique que nossa camada estará visível apenas no intervalo definido pelas propriedades discutos no passo anterior. Lembre-se que você pode criar atributos com o mesmo nome dessas propriedades e colocar intervalos diferentes, mas que só serão aplicados para aquela featura específica.
@@ -85,41 +96,46 @@ Agora vamos usar outra função de visibilidade, mas dessa vez uma que funciona 
 Aqui está a função que controla a visibilidade por percentil:
 
 ```
-controlVisibilityByPercentilesIncrement(@zoom_level, 'population', 5, 10)
+controlVisibilityByPercentilesIncrement('population', 5, 10)
 ```
 
 Explicando os argumentos:
 
-* 1º parametro: nivel de zoom atual.
-* 2º parametro: nome do atributos a ser considerado nos cálculos (seria o campo que conteria a população das cidades, no nosso exemplo).
-* 3º parametro: Percentil mínimo (5%, no nosso exemplo)
-* 4º parametro: Incremento, por zoom, ao percentil mínimo (a partir de 5%, crescendo de 10% em 10%).
+* 1º parametro: nome do atributos a ser considerado nos cálculos (seria o campo que conteria a população das cidades, no nosso exemplo).
+* 2º parametro: Percentil mínimo (5%, no nosso exemplo)
+* 3º parametro: Incremento, por zoom, ao percentil mínimo (a partir de 5%, crescendo de 10% em 10%).
 
 ### Aplicando estilos automaticamente
 
-Toda vez que você clica em no ícone ![](/images/apply_style.png). os estilos cadastrados em cada tag serão aplicados. Qual estilo será aplicado, dependerá do que for especificado na propriedade `_style` de cada tag.
+Toda vez que você clica em no ícone ![](/images/apply_style.png). os estilos cadastrados em cada tag serão aplicados. Qual estilo será aplicado, dependerá do que for especificado na propriedade `_style` de cada tag. Funciona para qualquer tipo de camada, desde que tenha uma TAG associada.
 
 ### Estrutura: re-organizando automaticamente as camadas
 
-Após definir como será a estrutura de camadas do seu projeto, vá em **Settings -> Structure**, clique em **Update** e depois em **Apply**. A organização das camadas com tag será gravada. A partir de então, toda vez que você clicar no ícone ![](/images/apply_structure.png), o projeto será automaticamente organizado, na mesma ordem.
+Parte do problema de quem produz mapas em série é padronizar inclusive a ordem em que as camadas aparecem dentro do Qgis. Com o tempo é comum que as diferenças entre um projeto e outro apareçam. A ferramenta **Apply Structure** Quando terminar, vá em **Settings -> Structure**, clique em **Update** e depois em **Apply**. A estrutura de pastas (grupos) e a ordem das camadas COM TAG serão gravadas. A partir de então, toda vez que você clicar no ícone ![](/images/apply_structure.png), o projeto será automaticamente organizado, na mesma ordem e nas mesmas pastas (mesmo que não estejam criadas).
 
 ### Baixando camadas vetoriais OSM
 
-Você pode adicionar propriedades OSM à suas tags de forma que o plugin consiga automaticamente baixar as camadas OSM correspondentes. Para isso, atribua à suas tags as propriedades `_osm_key`, `_osm_values` e `_osm_type`. No caso da propriedade `_osm_values`, é possível adicionar mais de um valor.
+Você pode adicionar uma propriedade OSM à suas tags de forma que o plugin consiga automaticamente baixar as camadas vetoriais. Para isso, atribua à suas tags as propriedades `_osm_query` e `_geometry_type`. Veja o que são essqas propriedades:
 
-Por exemplo, uma possível configuração para baixar rodovias seria:
+* `_osm_query`: chave e valor de pesquisa. No formato: chave=valor. Apenas um valor por entrada na lista apresentada na tela de adição de propriedade. Por exemplo, para obter as cidades adicionaríamos o seguinte (2 entradas diferentes): 
+- place=city
+- place=town
 
-* `_osm_key` = highway
-* `_osm_values` ​​= [primary, secondary, tertiary]
-* `_osm_type` = lines
+* `_geometry_type`: tipo de geometria. Valores possíves: points, lines, multilinestrings e multipolygons. No caso do nosso exemplo anterior, a escolha seria 'points', já que cidades são entidades pontuais (pelo menos assim costuma-se representar no mapa).
 
-Para baixar automaticamente os dados OSM de todas as tags, basta clicar em ![](/images/osm.png), selecionar o CRS e a extensão. Tenha em mente que só serão baixadas as camadas com tag que possuam todas as três propriedades acima mencionadas.
+Para baixar automaticamente os dados OSM de todas as tags, basta clicar em ![](/images/osm.png), selecionar o CRS e a extensão. Há um outro campo onde você pode selecionar as tags a serem baixadas: por padrão, todas são selecionadas... mas caso já tenha baixado alguma, basta selecionar ou des-selecionar as tags antes de executar.
 
 ### Gerando Sombreamento
 
-O plugin gera 2 camadas raster de sombreamento, já na ordem em que precisam estar: uma em cima da outra. Precisa ser assim porque usamos duas fontes luminosas, com diferentes azimutes, blend modes e configurações de brilho e contraste. Essa composição dá ao sombramento final mais detalhes e mais suavidade.
+A ferramenta de sombreamento oferecida pelo plugin baseia-se em 2 técnicas:
 
-Além disso, as duas camadas recebem o efeito de Perspectiva Aérea: quanto mais alto, mais contraste. Isso é bom porque em geral as porções mais baixas de determinada regiões é que contém a maior quantidade de cidades, vilas, estradas, estabelecimentos etc... e menos constraste significa maior facilidade para ler o mapa quando há muitos elementos sobre ele. Caso queira, aqui está um bom artigo sobre esse tema: http://www.reliefshading.com/design/aerial-perspective/.=
+* Iluminação bidirecional: duas fontes de luz são usadas. Isso garante que mais de um lado de uma montanha seja iluminado, revelando detalhes que de outra maneira estariam encobertos por sombras. Não usamos mais do que uma fonte de luz pois isso frequentemente gera sombreamentos pouco naturais, muitas vezes plastificados. Você controla o ângulo entre essas fontes através do campo **Angle between light sources**. O valor ideal para esse parâmetro é algo entre 35 - 70 graus. Valores menores tendem a criar duas fontes de luz muito próximas e o efeito acaba sendo pequeno. Valores maiores tendem a dar resultados mais plastificados.
+
+* Perspectiva Aérea: sombreamentos são excelentes peças para dar ao leitor do mapa uma visão clara do relevo. Mas podem atrapalhar muito conforme outros elementos vão sendo inseridos: as cidades, as estradas, rótulos etc. O culpado disso muitas vezes é o contraste imposto pelas sombras e luzes do sombreamento. A persectiva aérea ameniza esse problema ao diminuir o contraste nas áreas mais baixas e aumentá-lo nas mais altas. Isso é bom porque justamente em regiões mais baixas é que em geral temos grande acúmulo de elementos urbanos e, portanto, de simbologias e rótulos. Já no alto das montanhas não costumamos ter muitos elementos representados, podendo dar-se ao luxo de ter bom contraste. Controle a perspectiva aérea através do parâmetro **Aerial Perspective Intensity**. Quanto mais alto o valor, maior a diferença de contraste entre as regiões altas e baixas. Valores entre 50 e 70 costumam dar bons resultados. Saiba mais sobre esse tema em: http://www.reliefshading.com/design/aerial-perspective/.
+
+Importante ressaltar que essa ferramenta gera 2 camadas que precisam estar na ordem em que são geradas. Renomei-as, se necessário, para lembrar a ordem. O motivo disso é que cada camada representa uma das fontes de luz e ainda recebem diferentes configurações de brilho, contraste e transparência. 
+
+Por último, lembre-se de deixar o DEM debaixo das duas camadas, colorindo-o conforme achar melhor.
 
 Clique em ![](/images/relief_creator.png) para gerar o sombreamento.
 

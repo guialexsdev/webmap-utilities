@@ -53,7 +53,8 @@ class DownloadOsmByTag(QgsProcessingAlgorithm):
         projectScope = QgsExpressionContextUtils.projectScope(project)
         queryBuilders: list[OSMQueryBuilder] = []
 
-        for tag in self.tagsToDownload:
+        for index in parameters['tags']:
+            tag = self.tagsToDownload[index]
             osmQueryVar = Variable.formatVariableName(tag, '_osm_query')
             geomTypeVar = Variable.formatVariableName(tag, '_geometry_type')
 

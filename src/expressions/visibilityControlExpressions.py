@@ -101,9 +101,14 @@ def controlVisibilityByPercentilesArray(attribute, percentiles, feature, parent,
         maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1])
 
         if currentZoom >= minZoom and currentZoom <= maxZoom:
-            _percentiles = Utils.strToArrayOfNumbers(Utils.getVariable(key, percentiles, feature)[1]) if isinstance(percentiles, str) else percentiles
-            attrValue = float(feature[attribute])
+            attrValue = float(feature[attribute])  
             attrCollection = []
+
+            if currentZoom == maxZoom and (attrValue == NULL or attrValue is None):
+                return 1
+            
+            _percentiles = Utils.strToArrayOfNumbers(Utils.getVariable(key, percentiles, feature)[1]) if isinstance(percentiles, str) else percentiles
+
 
             fromMinOffset = currentZoom - minZoom
             percentileIndex = Utils.boundValue(fromMinOffset, 0, len(_percentiles) - 1)
@@ -180,10 +185,13 @@ def controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment,
         maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1])
         _increment = float(Utils.getVariable(key, increment, feature)[1] if isinstance(increment, str) else increment)
 
-        attrValue = feature[attribute]
-        attrCollection = []
-
         if currentZoom >= minZoom and currentZoom <= maxZoom:
+            attrValue = float(feature[attribute])
+            attrCollection = []
+
+            if currentZoom == maxZoom and (attrValue == NULL or attrValue is None):
+                return 1
+        
             fromMinOffset = currentZoom - minZoom if currentZoom >= minZoom else 0
             percentile = minPercentile + (_increment*fromMinOffset)
             percentileVar = f'_layer_percentile_{percentile}'
