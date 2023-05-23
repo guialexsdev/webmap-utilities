@@ -24,7 +24,7 @@ Aqui está uma lista de funcionalidades:
 
 ## Instalação
 
-Por enquanto o projeto está disponível apenas em formato zip. [Clique aqui para baixar o plugin](https://www.trilhasperdidas.com.br/files/plugin/webmap-utilities-plugin.wpc).
+Por enquanto o projeto está disponível apenas em formato zip. [Clique aqui para baixar o plugin](https://www.trilhasperdidas.com.br/files/plugin/webmap-utilities-plugin.zip).
 
 Para acessar as ferramentas, clique com o botão direito em qualquer área livre da barra de ferramentas (barra de ícones) e marque **Webmap Utilities Toolbar**.
 
