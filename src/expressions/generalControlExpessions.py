@@ -8,7 +8,7 @@ def zoomLevel(feature, parent, context):
 @qgsfunction(args='auto', group='Webmap - General')
 def controlByIncrement(increment, minValue, maxValue, feature, parent, context):
     """
-    controlByIncrement(currentZoom, increment, minValue, maxValue)<br><br>
+    controlByIncrement(increment, minValue, maxValue)<br><br>
     Controls any numeric property of features by incrementing a value from minValue up to maxValue. For example,
     you can use this function to increase the size of a symbol ou label.
 
@@ -16,7 +16,6 @@ def controlByIncrement(increment, minValue, maxValue, feature, parent, context):
 
     <h2>Parameters</h2>
     <ul>
-      <li><b>currentZoom</b>: current zoom level. Leave it with the value of @zoom_level variable.</li>
       <li><b>increment</b>: increment added to minValue at each zoom level OR a property name.</li>
       <li><b>minValue</b>: minimum value OR a property name</li>
       <li><b>maxValue</b>: maximum value OR a property name</li>
@@ -25,8 +24,8 @@ def controlByIncrement(increment, minValue, maxValue, feature, parent, context):
     <br>
 
     <h2>Example usage:</h2>
-    controlByIncrement(@zoom_level, 1, 1, 10)
-    controlByIncrement(@zoom_level, '_symbol_size_increment', '_symbol_size_min', '_symbol_size_max')
+    controlByIncrement(1, 1, 10)
+    controlByIncrement('_symbol_size_increment', '_symbol_size_min', '_symbol_size_max')
     """
 
     key = Utils.getCachedLayerTag(context)
@@ -44,7 +43,7 @@ def controlByIncrement(increment, minValue, maxValue, feature, parent, context):
 @qgsfunction(args='auto', group='Webmap - General')
 def controlByArray(array, feature, parent, context):
     """
-    controlByArray(currentZoom, array)<br><br>
+    controlByArray(array)<br><br>
     Controls any numeric property of features by using values of a fixed array. For example,
     you can use this function to increase the size of a symbol ou label.
 
@@ -52,7 +51,6 @@ def controlByArray(array, feature, parent, context):
 
     <h2>Parameters</h2>
     <ul>
-      <li><b>currentZoom</b>: current zoom level. Leave it with the value of @zoom_level variable.</li>
       <li><b>array</b>: array of values OR a property name.</li>
       <li><b>minValue</b>: minimum value OR a property name</li>
       <li><b>maxValue</b>: maximum value OR a property name</li>
@@ -61,8 +59,8 @@ def controlByArray(array, feature, parent, context):
     <br>
 
     <h2>Example usage:</h2>
-    controlByArray(@zoom_level, array(1,2,3))
-    controlByArray(@zoom_level, '_symbol_size_increment_arr')
+    controlByArray(array(1,2,3))
+    controlByArray('_symbol_size_increment_arr')
     """
     key = Utils.getCachedLayerTag(context)
 
@@ -75,7 +73,7 @@ def controlByArray(array, feature, parent, context):
 @qgsfunction(args='auto', group='Webmap - General')
 def controlByMinMaxNormalization(minValue, maxValue, feature, parent, context):
     """
-    controlByMinMaxNormalization(currentZoom, minValue, maxValue)<br><br>
+    controlByMinMaxNormalization(minValue, maxValue)<br><br>
     Controls any numeric property of features by using min-max normalization. You just need to choose a minValue
     and a maxValue and the function will find an appropriate increment value.
 
@@ -83,7 +81,6 @@ def controlByMinMaxNormalization(minValue, maxValue, feature, parent, context):
 
     <h2>Parameters</h2>
     <ul>
-      <li><b>currentZoom</b>: current zoom level. Leave it with the value of @zoom_level variable.</li>
       <li><b>minValue</b>: minimum value OR a property name</li>
       <li><b>maxValue</b>: maximum value OR a property name</li>
     </ul>
@@ -91,8 +88,8 @@ def controlByMinMaxNormalization(minValue, maxValue, feature, parent, context):
     <br>
 
     <h2>Example usage:</h2>
-    controlByMinMaxNormalization(@zoom_level, array(1,2,3))
-    controlByMinMaxNormalization(@zoom_level, '_symbol_size_min', '_symbol_size_max')
+    controlByMinMaxNormalization(array(1,2,3))
+    controlByMinMaxNormalization('_symbol_size_min', '_symbol_size_max')
     """
     key = Utils.getCachedLayerTag(context)
 

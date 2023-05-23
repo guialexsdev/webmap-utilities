@@ -1,6 +1,6 @@
 # Webmap Utilities - Plugin QGis para facilitar a criação de webmaps
 
-## O que o plugin faz:
+## O que o plugin faz?
 
 O plugin Webmap Utilities oferece ferramentas para facilitar a construção de webmaps, ou seja, mapas dinâmicos cujo conteúdo varia com a escala.
 
@@ -24,7 +24,7 @@ Aqui está uma lista de funcionalidades:
 
 ## Instalação
 
-No QGis, instale o Webmap Utilities através do menu **Plugins -> Manage and Install Plugins**. Procure por Webmap Utitlities" e instale. Pode ser necessário, na aba Settings do gerenciador de plugins, marcar a opção **Show also Experimental Plugins**.
+Por enquanto o projeto está disponível apenas em formato zip. [Clique aqui para baixar o plugin](https://www.trilhasperdidas.com.br/files/plugin/webmap-utilities-plugin.wpc).
 
 Para acessar as ferramentas, clique com o botão direito em qualquer área livre da barra de ferramentas (barra de ícones) e marque **Webmap Utilities Toolbar**.
 
@@ -41,6 +41,18 @@ O sistema de marcação facilita a replicação e a padronização de mapas. Dig
 De maneira geral o intuito do sistema de marcação é realizar operações em lote, ou seja, em várias camadas ao mesmo tempo. Com o tempo novas funcionalidades nesse sentido serão publicadas.
 
 Uma tag nada mais é do que uma espécie de categoria, indicando do que se trata determinada camada. Cada tag pode ter uma ou mais propriedades. A tag que representa **cidades**, que é o exemplo que daremos logo adiante, poderá ter uma propriedade chamada **_style**: todas as camadas marcadas com a tag **cidades** receberiam o mesmo estilo. Outra propriedade seria a importante **_zoom_min**, ela indica a partir de qual nivel de zoom as camadas do tipo **cidades** seriam visíveis no mapa.
+
+### Inicializando um projeto
+
+**objetivo**: inicializar o plugin para poder usar as ferramentas que dependem do sistema de tags.
+
+Se você vai utilizar as ferramentas que dependem do sistema de tags, então é preciso inicializar o projeto. Para isso, clique no botão ![](/images/configure_project.png). Esse primeiro passo é necessário, já que os niveis de zoom, principalmente se você pretende fazer mapas para visualizar em aplicativos ou no leaflet, precisam estar configurados para escalas específicas. Além disso, ao inicializar o projeto, o plugin salvará as configurações padrão. 
+
+Só é preciso incializar o projeto uma vez, desde que você sempre salve o projeto. E uma vez inicializado, todos os botões do plugin serão liberados, como na imagem abaixo.
+
+![](/images/toolbar_only.png)
+
+Lembre-se que para acessar essas ferramentas, é preciso clicar com o botão direito em qualquer área livre da barra de ferramentas (barra de ícones) e marcar a opção **Webmap Utilities Toolbar**, para adicionar o plugin na barra de ícones.
 
 ### Adicionando tags
 
@@ -129,9 +141,9 @@ Para baixar automaticamente os dados OSM de todas as tags, basta clicar em ![](/
 
 A ferramenta de sombreamento oferecida pelo plugin baseia-se em 2 técnicas:
 
-* Iluminação bidirecional: duas fontes de luz são usadas. Isso garante que mais de um lado de uma montanha seja iluminado, revelando detalhes que de outra maneira estariam encobertos por sombras. Não usamos mais do que uma fonte de luz pois isso frequentemente gera sombreamentos pouco naturais, muitas vezes plastificados. Você controla o ângulo entre essas fontes através do campo **Angle between light sources**. O valor ideal para esse parâmetro é algo entre 35 - 70 graus. Valores menores tendem a criar duas fontes de luz muito próximas e o efeito acaba sendo pequeno. Valores maiores tendem a dar resultados mais plastificados.
+* **Iluminação bidirecional**: duas fontes de luz são usadas. Isso garante que mais de um lado de uma montanha seja iluminado, revelando detalhes que de outra maneira estariam encobertos por sombras. Não usamos mais do que uma fonte de luz pois isso frequentemente gera sombreamentos pouco naturais, muitas vezes plastificados. Você controla o ângulo entre essas fontes através do campo **Angle between light sources**. O valor ideal para esse parâmetro é algo entre 35 - 70 graus. Valores menores tendem a criar duas fontes de luz muito próximas e o efeito acaba sendo pequeno. Valores maiores tendem a dar resultados mais plastificados.
 
-* Perspectiva Aérea: sombreamentos são excelentes peças para dar ao leitor do mapa uma visão clara do relevo. Mas podem atrapalhar muito conforme outros elementos vão sendo inseridos: as cidades, as estradas, rótulos etc. O culpado disso muitas vezes é o contraste imposto pelas sombras e luzes do sombreamento. A persectiva aérea ameniza esse problema ao diminuir o contraste nas áreas mais baixas e aumentá-lo nas mais altas. Isso é bom porque justamente em regiões mais baixas é que em geral temos grande acúmulo de elementos urbanos e, portanto, de simbologias e rótulos. Já no alto das montanhas não costumamos ter muitos elementos representados, podendo dar-se ao luxo de ter bom contraste. Controle a perspectiva aérea através do parâmetro **Aerial Perspective Intensity**. Quanto mais alto o valor, maior a diferença de contraste entre as regiões altas e baixas. Valores entre 50 e 70 costumam dar bons resultados. Saiba mais sobre esse tema em: http://www.reliefshading.com/design/aerial-perspective/.
+* **Perspectiva Aérea**: sombreamentos são excelentes peças para dar ao leitor do mapa uma visão clara do relevo. Mas podem atrapalhar muito conforme outros elementos vão sendo inseridos: as cidades, as estradas, rótulos etc. O culpado disso muitas vezes é o contraste imposto pelas sombras e luzes do sombreamento. A persectiva aérea ameniza esse problema ao diminuir o contraste nas áreas mais baixas e aumentá-lo nas mais altas. Isso é bom porque justamente em regiões mais baixas é que em geral temos grande acúmulo de elementos urbanos e, portanto, de simbologias e rótulos. Já no alto das montanhas não costumamos ter muitos elementos representados, podendo dar-se ao luxo de ter bom contraste. Controle a perspectiva aérea através do parâmetro **Aerial Perspective Intensity**. Quanto mais alto o valor, maior a diferença de contraste entre as regiões altas e baixas. Valores entre 50 e 70 costumam dar bons resultados. Saiba mais sobre esse tema em: http://www.reliefshading.com/design/aerial-perspective/.
 
 Importante ressaltar que essa ferramenta gera 2 camadas que precisam estar na ordem em que são geradas. Renomei-as, se necessário, para lembrar a ordem. O motivo disso é que cada camada representa uma das fontes de luz e ainda recebem diferentes configurações de brilho, contraste e transparência. 
 
@@ -148,3 +160,11 @@ Clique em ![](/images/relief_creator.png) para gerar o sombreamento.
 * Para replicar as mesmas configurações, tags e propriedades em outro projeto você pode:
    - Exportar e Importar (há opções para isso em ![](/images/settings.png) **Settings**)
    - Ou criar um Projeto Template no Qgis (e nada mais, já que todas as configurações são guardadas no projeto)
+
+## Projeto Exemplo
+
+No link abaixo você poderá fazer o download de um projeto exemplo. É um arquivo `.wpc`, ou seja, um arquivo de exportação do plugin. Basta iniciar um projeto no Qgis, inicializar o plugin, ir em ![](/images/settings.png) **Settings** e clicar em **Import**. Você será perguntado se quer sobreescrever as configurações atuais, diga que sim. Depois será perguntado se quer salvar em uma pasta específica os estilos embutidos no arquivo de exportação ou se deseja usar como arquivo temporário. Clique na opção **Use a temporary folder** por enquanto, apenas para ter uma ideia de como funciona o plugin.
+
+[Clique aqui para baixar o projeto de exemplo](https://www.trilhasperdidas.com.br/files/plugin/webmap_plugin_example.wpc)
+
+O estilo do arquivo DEM pode ficar bom ou não, a depender da região. Mas aqui vai um DEM de exemplo, de Santiago - Chile, que usamos originalmente: [Clique aqui para baixar o arquivo DEM de exemplo](https://www.trilhasperdidas.com.br/files/plugin/dem_santiago.wpc). Mas você pode usar o seu próprio DEM. Lembre-se que nesse projeto exemplo usamos unicamente os dados OSM, então a região que você escolher pode ou não ter dados suficientes. Tente escolher um local com cidades um pouco maiores para aumentar as chances de ter dados suficientes no OSM.

@@ -5,17 +5,12 @@ import numpy as np
 @qgsfunction(args='auto', group='Webmap - Visibility', referenced_columns=['_zoom_min','_zoom_max'])
 def controlVisibility(feature, parent, context):
     """
-    controlVisibilityOffset(currentZoom)<br><br>
+    controlVisibilityOffset()<br><br>
     Controls features visibility by _zoom_min and _zoom_max properties. If a feature don't have these properties or they are NULL, 
     then the TAG property will be used. Note that this function do not override the 'Scale Dependent Visibility' option of a layer.
     <br>
-    <h2>Parameters</h2>
-    <ul>
-      <li><b>currentZoom</b>: current zoom level. Leave it with the value of @zoom_level variable.</li>
-    </ul>
-    <br>
     <h2>Example usage:</h2>
-    controlVisibility(@zoom_level)
+    controlVisibility()
     """
     key = Utils.getCachedLayerTag(context)
 
@@ -28,14 +23,13 @@ def controlVisibility(feature, parent, context):
 @qgsfunction(args='auto', group='Webmap - Visibility')
 def controlVisibilityOffset(minZoomOffset, maxZoomOffset, feature, parent, context):
     """
-    controlVisibilityOffset(currentZoom, minZoomOffset, maxZoomOffset)<br><br>
+    controlVisibilityOffset(minZoomOffset, maxZoomOffset)<br><br>
     Controls features visibility by _zoom_min and _zoom_max properties. This function adds an offset value to the _zoom_min and _zoom_max values,
     only for the current style.If a feature don't have these properties or they are NULL, then the TAG property will be used.
     Note that this function do not override the 'Scale Dependent Visibility' option of a layer.
     <br>
     <h2>Parameters</h2>
     <ul>
-      <li><b>currentZoom</b>: current zoom level. Leave it with the value of @zoom_level variable.</li>
       <li><b>minZoomOffset</b>: value to be added to _zoom_min property.</li>
       <li><b>maxZoomOffset</b>: value to be added to _zoom_max property.</li>
     </ul>
@@ -43,7 +37,7 @@ def controlVisibilityOffset(minZoomOffset, maxZoomOffset, feature, parent, conte
     <h2>Example usage:</h2>
     The following example increases the visibility interval of a layer that is controlled by _zoom_min and _zoom_max properties.
     <br>
-    controlVisibility(@zoom_level, -1, 1)
+    controlVisibility(-1, 1)
     """
     key = Utils.getCachedLayerTag(context)
 
@@ -56,7 +50,7 @@ def controlVisibilityOffset(minZoomOffset, maxZoomOffset, feature, parent, conte
 @qgsfunction(args='auto', group='Webmap - Visibility')
 def controlVisibilityByPercentilesArray(attribute, percentiles, feature, parent, context: QgsExpressionContext):
     """
-    controlVisibilityByPercentilesArray(currentZoom, attribute, percentiles)<br><br>
+    controlVisibilityByPercentilesArray(attribute, percentiles)<br><br>
     Controls features visibility by using an array of percentiles. For example, say you have a vector layer containing cities and its populations. 
     So using the array arr = [5,25,50,100] and considering _zoom_min = 10 and _zoom_max = 13, it will produce the following results:
 
@@ -73,14 +67,13 @@ def controlVisibilityByPercentilesArray(attribute, percentiles, feature, parent,
 
     <h2>Parameters</h2>
     <ul>
-      <li><b>currentZoom</b>: current zoom level. Leave it with the value of @zoom_level variable.</li>
       <li><b>attribute</b>: numeric attribute name that will be used for percentile calculations (field 'population' in the case above).</li>
       <li><b>percentiles</b>: array of percentiles OR a property name. Ex: array(5,25,5,100) ou '_cities_percentiles_array'</li>
     </ul>
     <br>
     <h2>Example usage:</h2>
-    controlVisibilityByPercentilesArray(@zoom_level, array(5,25,50,100))
-    controlVisibilityByPercentilesArray(@zoom_level, '_cities_percentiles_array')
+    controlVisibilityByPercentilesArray(array(5,25,50,100))
+    controlVisibilityByPercentilesArray('_cities_percentiles_array')
     """
         
     try:
@@ -138,7 +131,7 @@ def controlVisibilityByPercentilesArray(attribute, percentiles, feature, parent,
 @qgsfunction(args='auto', group='Webmap - Visibility')
 def controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment, feature, parent, context):
     """
-    controlVisibilityByPercentilesIncrement(currentZoom, attribute, minPercentile, increment)<br><br>
+    controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment)<br><br>
     Controls features visibility by using a minimum percentile value that will be automaticaly incremented. 
     For example, say you have a vector layer containing cities and its populations. So using minPercentile = 5, increment = 5 and 
     considering _zoom_min = 10 and _zoom_max = 13, it will produce the following results:
@@ -156,15 +149,14 @@ def controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment,
 
     <h2>Parameters</h2>
     <ul>
-      <li><b>currentZoom</b>: current zoom level. Leave it with the value of @zoom_level variable.</li>
       <li><b>attribute</b>: numeric attribute name that will be used for percentile calculations (field 'population' in the case above).</li>
       <li><b>minPercentile</b>: minimum percentile number OR a property name. Ex: 5 ou '_cities_min_percentile'</li>
       <li><b>increment</b>: value to be added to minPercentile at each zoom level. Ex: 5 ou '_cities_increment_percentile'</li>
     </ul>
     <br>
     <h2>Example usage:</h2>
-    controlVisibilityByPercentilesIncrement(@zoom_level, 5, 5)
-    controlVisibilityByPercentilesIncrement(@zoom_level, '_cities_min_percentile', '_cities_increment_percentile')
+    controlVisibilityByPercentilesIncrement(5, 5)
+    controlVisibilityByPercentilesIncrement('_cities_min_percentile', '_cities_increment_percentile')
     """
 
     try:
