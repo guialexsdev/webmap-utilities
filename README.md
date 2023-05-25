@@ -32,19 +32,15 @@ Acesse as ferramentas do plugin clicando com o botão direito do mouse em qualqu
 
 ## Quick Tutorial
 
-We built a tagging system to make it easy to replicate and standardize a map. Let's say you've made a map of a certain region and you liked the result. To replicate such  map for another region using Webmap Utilities it would take just a few clicks to: 
-
-- Automatically download the OSM layers
-- Automatically apply styles to all layers (vector or raster)
-- Automatically organize the layer tree, in the right order
+Before continuing, download this vector layer and this style (QML). The layer contains cities of Pensilvania state, EUA. It will be used in this tutorial.
 
 ### Controlling visibility of a layer
 
-Suppose we have a vector layer containing all cities of a certain region. Actually you don't need to suppose, click here to download all cities of Pensilvania State (EUA). Open it and give it a simple style showing labels only. One of the first problems when designing a webmap is to decide what will be shown at each zoom level or scale. Say that our cities has a visibility range that begins at level 5 and finishes at level 15. Of course you can do this by just setting the **Scale dependent visibility** option that Qgis already offer, but you need to memorize which scale corresponds to which zoom level. To avoid it you may use our **Set layer zoom level visibility** tool, that works with zoom levels instead of scales. Right-click a layer to get access to that option.
+One of the first problems when designing a webmap is to decide what will be shown at each zoom level or scale. Say that our cities has a visibility range that begins at level 5 and finishes at level 15. Of course you can do this by just using the **Scale dependent visibility** option that Qgis already offer, but you need to memorize which scale corresponds to which zoom level. To avoid it you may use our **Set layer zoom level visibility** tool, that works with zoom levels instead of scales. Right-click a layer to get access to that option.
 
 But what if you add another layer of cities to the project? You will certainly need to set visibility again, one more time for each extra layer you add. Not a big problem yet, but it will be, as soon as you have a map with many layers that need to be replicated to another area. And what if you need to show at level 4 only a single feature, an important feature? To resolve these and other problems we propose a tagging system: tags that identifies your layers and control them by default or user defined properties. So, let us define a tag and 2 properties to control the visibility of our layer.
 
-Find and click ![](/images/settings.png) **Settings** button. The first screen is the one that manages all tags of a project. Click ![](/images/symbologyAdd.png) **Add new tag...** to insert a new tag. Give it meaningful name like **city**. And before proceed, make sure that our layer begins with the word **city**, that is how the plugin recognize that a layer belongs to a tag. Now right click the tag name and then **Add property**. Open the list of properties and select `_zoom_min`. In value field type the number 5. Every layer tagged with the word **city** will only be visbile at zoom level 5. Click OK and repeat the process to add the property `_zoom_max` with value 15. Exit Settings screen pressing OK to see the result. Now go to the labels properties of the layer and then to **Rendering** properties. Edit Data Defined Override of **Show label** option and type the following function:
+Click ![](/images/settings.png) **Settings** button. The first screen is the one that manages all tags of a project. Click ![](/images/symbologyAdd.png) **Add new tag...** to insert a new tag. Give it meaningful name like **city**. And before proceed, make sure that our layer begins with the word **city**, that is how the plugin recognize that a layer belongs to a tag. Now right click the tag name and then **Add property**. Open the list of properties and select `_zoom_min`. In value field type the number 5. Every layer tagged with the word **city** will only be visbile at zoom level 5. Click OK and repeat the process to add the property `_zoom_max` with value 15. Exit Settings screen pressing OK to see the result. Now go to the labels properties of the layer and then to **Rendering** properties. Edit Data Defined Override of **Show label** option and type the following function:
 
 `controlVisibility()`
 
@@ -104,9 +100,13 @@ Now add the property `_geometry_type` e choose the value `lines`. We are just te
 
 Apply and close the Settings dialog and click on ![](/images/osm.png) button. Choose a CRS and an extent. Field **Tags** will be by default initialized with all tags that have `_osm_query` and `_geometry_type` properties, as they are required to download data from OSM. Click Run to start downloading.
 
-### Automate style application using `_style`property
+### Automate style application using `_style` property
 
 The `_style` property tells what style should be applied to every layer of a same tag. Just add another property to one or all tags, selecting `_style` property and choosing a QML file. Every time you click the ![](/images/apply_style.png) icon, a style will be applied to each tagged layer.
+
+### Re-arrange the layer tree
+
+It is important to keep you layer tree organized and standardized across projects. If you got to ![](/images/settings.png) **Settings**  -> **Structure** and click **Update** button, the arrangement of your tagged layers will be recorded. Then every time you click ![](/images/apply_structure.png) **Apply Structre** button, all tagged layers will be organized using the recorded layers arrangement.   
 
 ### Using your own properties
 
@@ -140,4 +140,20 @@ If you are going to replicate your map, it's important to export you Webmap Plug
 
 ### Import settings
 
-To import settings just click ![](/images/settings.png) **Settings** -> **Import**. Because style may be present int a .wpc file, you might be asked what to do with QML file: you may choose a folder to save them; or just use them as temporary files.
+To import settings just click ![](/images/settings.png) **Settings** -> **Import**. Because style files may be present in a .wpc file, you might be asked what to do with QML file: you may choose a folder to save them; or just use them as temporary files.
+
+### Example Project
+
+Now it's your time try it out. Download this wpc file to replicate a map similar to the map below:
+
+[image]
+
+Just follow these steps in order to create the map:
+
+* Download a DEM file of the region of interest
+* Reproject it to EPSG:3857
+* ![](/images/relief_creator.png) Generate a Shaded Relief
+* ![](/images/settings.png) Import settings (.wpc file we provided as example)
+* ![](/images/osm.png) Download OSM data
+* ![](/images/apply_structure.png) Re-arrange layers
+* ![](/images/apply_style.png) Apply styles
