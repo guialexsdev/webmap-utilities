@@ -20,7 +20,7 @@ Here is a list of features we provide:
 ## Requirements and dependencies
 
 - Minimum QGis version 3.28
-- You need to install QuickOSM plugin
+- You need to install QuickOSM plugin before installing Webmap Utilities.
 
 ## Installing
 
@@ -32,107 +32,112 @@ Acesse as ferramentas do plugin clicando com o botão direito do mouse em qualqu
 
 ## Quick Tutorial
 
-We built a tagging system to make it easy to replicate a map. Let's say you've made a map of a certain region and you like the result. To replicate this idea of ​​a map for another region, using Webmap Utilities it would take just a few clicks to: 
+We built a tagging system to make it easy to replicate and standardize a map. Let's say you've made a map of a certain region and you liked the result. To replicate such  map for another region using Webmap Utilities it would take just a few clicks to: 
 
 - Automatically download the OSM layers
-- Automatically apply styles to all layers, vector or raster
+- Automatically apply styles to all layers (vector or raster)
 - Automatically organize the layer tree, in the right order
 
-### Adding a tag
+### Controlling visibility of a layer
 
-The tagging system is simple. First you define the category - tha Tag - of each layer. For example, we might have multiple layers, perhaps from different sources, containing the villages in a given region. While all of these layers might have different names, they could all be categorized as 'village', as they will likely share several settings (styling options, for example). So, our tag for our village vector layers is simple **village**.
+Suppose we have a vector layer containing all cities of a certain region. Actually you don't need to suppose, click here to download all cities of Pensilvania State (EUA). Open it and give it a simple style showing labels only. One of the first problems when designing a webmap is to decide what will be shown at each zoom level or scale. Say that our cities has a visibility range that begins at level 5 and finishes at level 15. Of course you can do this by just setting the **Scale dependent visibility** option that Qgis already offer, but you need to memorize which scale corresponds to which zoom level. To avoid it you may use our **Set layer zoom level visibility** tool, that works with zoom levels instead of scales. Right-click a layer to get access to that option.
 
-Next we need to plan how the tagged layers will be recognized by the plugin. Currently, you can do this in 2 ways:
+But what if you add another layer of cities to the project? You will certainly need to set visibility again, one more time for each extra layer you add. Not a big problem yet, but it will be, as soon as you have a map with many layers that need to be replicated to another area. And what if you need to show at level 4 only a single feature, an important feature? To resolve these and other problems we propose a tagging system: tags that identifies your layers and control them by default or user defined properties. So, let us define a tag and 2 properties to control the visibility of our layer.
 
-- Renaming your layer to contain the chosen tag at the beginning of the name. In our example, the name of one of the layers would be **villages source1**, the other would be **villages source2**.
+Find and click ![](/images/settings.png) **Settings** button. The first screen is the one that manages all tags of a project. Click ![](/images/symbologyAdd.png) **Add new tag...** to insert a new tag. Give it meaningful name like **city**. And before proceed, make sure that our layer begins with the word **city**, that is how the plugin recognize that a layer belongs to a tag. Now right click the tag name and then **Add property**. Open the list of properties and select `_zoom_min`. In value field type the number 5. Every layer tagged with the word **city** will only be visbile at zoom level 5. Click OK and repeat the process to add the property `_zoom_max` with value 15. Exit Settings screen pressing OK to see the result. Now go to the labels properties of the layer and then to **Rendering** properties. Edit Data Defined Override of **Show label** option and type the following function:
 
-- Inserting a Category in the layer's metadata. Just go to Properties -> Metadata -> Categories. In this case, it could just be 'villages'.
+`controlVisibility()`
 
-Now go to the plugin's ![](/images/settings.png) **Settings**  and register the tag with button ![](/images/symbologyAdd.png) **Add new tag...**. Don't forget to select the tag identification mode at the bottom of the screen.
+Go back to the canvas and zoom in and zoom out in order to see the results. In fact, visually we have the same effect as before, but the advantage is that now every layer tagged as **city** will only become visible in the range we defined with zoom min and zoom max properties.
 
-![Settings: add new tag clicking the + icon and choose identification mode at the bottom os the screen.](/images/step_adding_tag.png)
+Now say that you want Philadelphia city to become visible at level 4. You can do it by adding to the layer an attribute called `_zoom_min` and giving the value 4 only to Philadelphia feature (and NULL to all other features). It works because feature properties are preferred over global properties.
 
-### Adding a property to a tag
+### Controlling visibility with percentiles
 
-The next step is to insert some properties to the created tag. There are some predefined ones (but you can create your own too). Let's use, for example, the `_zoom_min` and `_zoom_max` properties. Together they control the range of zoom levels at which a feature or all of them will be visible.
+When you have hundred of features with labels, possibly overlapping each other, Qgis will hide some of them to make the map less crowded. But this is done without any criteria that helps user to understand the map. So we'll try to help Qgis in this matter by showing just a portion of feature at each zoom level: the higher the population of a city, the sooner it will be visible on the map.
 
-To add a property to the tag, go to ![](/images/settings.png) **Settings** -> Tags  and right-click on the tag name. Click **Add Property...**. Select `_zoom_min`, enter the number 9 and click OK. Repeat the process for the `_zoom_max` property, but choosing the number 15, for example. That is, the features of our 'villages' tagged layers will only be visible between levels 9 and 15 of zoom. At this time, the property is not yet taking effect. For that we need the next step. Let's go!
+To implement that strategy, go to **Show label** option set another function:
 
-![Add property to a tag](/images/step_add_property.png)
+`controlVisibilityByPercentilesIncrement('population', 1, 10)`
 
-You can create your own properties. Just go to ![](/images/settings.png) **Settings** and open the **Properties** tab.
+Here is what this function does: at first zoom level available (= 5), 1% of the highest population cities will be visible. At the next zoom level, 1% + 10% of the highest population will be visible. From zoom level 15 onwards, 100% of the cities will be visible on the map. And if you have a list of predefined percentiles, you can use a similar function called controlVisibilityByPercentilesArray:
 
-**Other useful properties**
+`controlVisibilityByPercentilesArray('population', array(1,20,50,100))`
 
-- `_style`: add this property to your tag and choose a style file (QML). Go to [Automatically applying styles](#automatically-applying-styles) to understand.
-- `_osm_key`: OSM key. Ex: place, highway, waterway etc. Need to exist alongside the other OSM properties
-- `_osm_value`: Together with `_osm_key`, they form a 'query' to fetch OSM data. Ex: town, primary_roads, river etc. Need to exist alongside the other OSM properties
-- `_osm_type`: Type of layer to be downloaded from OSM. Options: points, lines, multilines to multipolygons. Need to exist alongside the other OSM properties.
+Using the function above, at first zoom level 1% of cities will be visible; next, 1 + 20%...
 
-### Controlling a vector layer
+### Controlling other styling parameters
 
-Open Layer Properties. Let's work with the labels, for example. First, define a basic style that you like. Then in **Rendering** section, go to **Show Label**, **Data defined override** and click on **Edit** option to open the Expressions screen.
+It is sometimes useful to increase label size as the zoom level increases. This is because as the scale increases, the label becomes smaller and smaller relative to the area it represents. To automatically increase label size as the zoom level increases, go to the layer Properties -> Labels -> Text and add the following function to the Data Defined Override option of **Size** field:
 
-![Apply Data defined override to a label visibility](/images/step_controlling_layer1.png)
+`controlByIncrement(1, 7, 15)`
 
-Let's insert one of the control functions provided by the plugin. All these functions are under 'Webmap - General' and 'Webmap - Visibility'.
+The first number indicates an ammount of increment per zoom level. The second number is the minimum size, when zoom level = 5 (remeber we defined number 5 as the minimum zoom level). The third number is the maximum size. So, our labels begins at size = 7 and will growing up to size = 15, adding 1 at each level. You can use the alternative `controlByIncrementRelativeMax(1, 7, 8)`, where the third parameter means an offset from minimum size. Finally, you can use array, as we did in last section:
 
-Enter the following expression:
+`controlByArray(array(7,8,9,10,11,12,13,14,15))`
 
-```
-controlVisibility(@zoom_level)
-```
+Another function, if you don't care about how much the value will increase, is the following:
 
-Apply the style and go back to the canvas. Note that the features will only be visible in the defined range, between 9 and 15. The interesting thing is that you can create the `_zoom_min` and `_zoom_max` fields on the layer and set a specific value for one of the features, and these values ​​will only be valid for that feature. For example, if you set the range 8-16 just for feature X, only it will be visible at zoom levels 8 and 16.
+`controlByMinMaxNorm(7,15)`
 
-Let's now use another function, one that works with Percentiles. It's a way to make features visible little by little. For example, at zoom 9, only 5% of the most populated villages will be visible; at the next level, it will be 15% of the villages with the highest population... and so on. This percentage value is called a percentile.
+Basically, min-max normalization will be applied to your value range (7-15) considering zoom min and zoo max previously defined. You will see labels size uniformly increasing as zoom goes up.
 
-So here's the function that controls the visibility by Percentiles.
+Now lets think about cities again. Obviously, there are cities more importante than others in terms of population. It will be a good idea do give a bigger font size to bigger cities. So go to the layer Properties -> Labels -> Text and add the following function to the Data Defined Override option of **Size** field:
 
-```
-controlVisibilityByPercentilesIncrement(@zoom_level, 'population', 5, 10)
-```
+`controlByMinMaxNormRelativeMax(scaleExponential('population', 50, 0.5, 3, 8), 7)`
 
-Explaining the arguments:
+Note that we are using MinMax normalization, so we don't care about the increase value per zoom level. Just two parameters are required: min size and max size. And note that the function `scaleExponential('population', 50, 0.5, 3, 8)` is telling us that the minimum size is variable in a exponential fashion: less populous cities begins at size = 3; most populous cities begins at size = 8. It works just like `scale_exp`, provided by QGis, but here you don't need to know the exact value of the highest and lowest populations. Another difference is the second parameter: if you have cities with population absurdly higher than other you may want to decrease this value. Finally, the second argument of `controlByMinMaxNormRelativeMax` is the offset relative to minimum value: if minimum value is 3, then size will increase up to 7 + 3 = 10; if minimum value is 8, then size will increase up to 7 + 8 = 15.
 
-- 1st parameter: current zoom level.
-- 2nd parameter: name of the attribute to be considered in the calculations.
-- 3thd parameter: Minimum percentile (5%)
-- 4th parameter: Percentile increment at each zoom level (10%).
+Understand that you can use all the above function not only for size field of a label. You can use it to transparency fields, color fields (in this case using arrays only) etc.
 
-### Automatically applying styles
+### Automate OSM download using `_osm_query` property
 
-Every time you click the ![](/images/apply_style.png) icon, a style will be applied to each tagged layer. Which style will be applied depends on `_style` property value assigned to the tag.
+Whenever you add `_osm_query` to a tag, you are describing what vector layers need to be downloaded from OSM. Such tag is used in our OSM Downloader tool to download vector data of all tagged layers at once.
 
-### Structure: rearranging layers
+Go to ![](/images/settings.png) **Settings** and then create another tag called **road**. Right-click the new tag and then **Add property**. Select  `_osm_query`. You can add a list of items. In this case, list item must be in the format `<key>=<value>`. Add the following items to the list:
 
-When you are done with the structure (arrangement) of your map layers, go to Settings -> Structure, click on Update and then Apply. The organization of the tagged layers will then be recorded. Every time you click on the ![](/images/apply_structure.png) icon, your project's layers (only the tagged ones) will be reorganized (and groups created if necessary).
+* highway=primary
+* highway=primary_link
+* highway=primary_trunk
 
-### Downloading vector layers from OSM
+Now add the property `_geometry_type` e choose the value `lines`. We are just telling OSM downloader the geometry type of roads (they are lines, of course).
 
-You can add OSM properties to your tags so that the plugin automatically downloads vector layers. For this, use the following properties: `_osm_key`, `_osm_values` and `_osm_type`. In the case of the _osm_values ​​property, you can choose more than one value. 
+Apply and close the Settings dialog and click on ![](/images/osm.png) button. Choose a CRS and an extent. Field **Tags** will be by default initialized with all tags that have `_osm_query` and `_geometry_type` properties, as they are required to download data from OSM. Click Run to start downloading.
 
-For example, a possible configuration to download roads it would be:
+### Automate style application using `_style`property
 
-- `_osm_key` = highway
-- `_osm_values` ​​= [primary, secondary, tertiary]
-- `_osm_type` = lines
+The `_style` property tells what style should be applied to every layer of a same tag. Just add another property to one or all tags, selecting `_style` property and choosing a QML file. Every time you click the ![](/images/apply_style.png) icon, a style will be applied to each tagged layer.
 
-To download all layers of all tags, just click on the ![](/images/osm.png) icon and select the CRS and extent. Keep in mind that all mentioned properties need to be added to the tag.
+### Using your own properties
 
-### Generating Shaded Relief
+Its possible to create your own properties and use, for example, as argument in one of our custom functions. For example, instead of:
+
+`controlByIncrement(1, 7, 15)`
+
+You can can create property `label_size_min` and use it like this:
+
+`controlByIncrement(1, 'label_size_min', 15)`
+
+(And remember that you can create an attribute called `label_size_min` and give a different value to a single feature.)
+
+To create a property, go to ![](/images/settings.png) **Settings** -> **Properties** -> **Add new property**.
+
+### Generating a Shaded Relief
+
+**Using the tagging system is not required here**
 
 Our shaded relief tool creates two layers, in the order they need to be: one above the other. It works like this because each layer uses a light source with a different azimuth and different blend modes. This brings more details to the final shaded relief.
 
-In addition, both layers receive the Aerial Perspective effect: the higher the layer, the greater the contrast. This is good for cartography because usually the lower portions of a region are where cities, highways etc are located... less contrast, easier to recognize all these elements. Here is a good article about Aerial Perspective: http://www.reliefshading.com/design/aerial-perspective/.
+In addition, both layers receive the Aerial Perspective effect: the higher the layer, the greater the contrast. This is good for cartography because usually the lower portions of a region contains more cities, highways etc and less contrast means easier to recognize all these elements. Here is a good article about Aerial Perspective: http://www.reliefshading.com/design/aerial-perspective/.
 
-Click on ![](/images/relief_creator.png) button to generate a Shaded Relief.
+Click on ![](/images/relief_creator.png) button to generate a Shaded Relief. The option **Aerial Perspective Intensity**, always between 0 and 100, increase/decrease the contrast between higher and lower altitudes. And the option **Angle Between Light Sources** controls the angle between the light sources: a number between 30 - 70 is generally a good choice; values close to 180 usually gives an undesirable plastic effect.
 
-### Other features
+Remember that layers are generated in the order they need to be, so its a good idea to rename them to something like "hillshade top" and "hillshade bottom".
 
-* Instead of using the scale selector, the one at the bottom of the main window, you can use the zoom level selector, which is next to the icons on our toolbar.
-* There are two ways for add and edit tags. You access the option ![](/images/settings.png) **Settings** and then choose the Tag or Properties tab; or you can right-click on any tagged layer and choose **Set tag property...** option.
-* You can create your own properties. In ![](/images/settings.png) **Settings**, just open the **Properties** tab and register a new property. After that, it will be available for use in the **Tags** tab.
-* To replicate the same settings, tags and properties in another project you can:
-   - Export and Import configurations (there are options for this in ![](/images/settings.png) **Settings**)
-   - Or create a Template Project in Qgis (and nothing else, as all settings are saved in the project)
+### Exporting settings
+
+If you are going to replicate your map, it's important to export you Webmap Plugin Project. You can do that by just click ![](/images/settings.png) **Settings** -> **Export**. Everything will be included in a file wit `.wpc` extension, even the styles assigned to `_style` property.
+
+### Import settings
+
+To import settings just click ![](/images/settings.png) **Settings** -> **Import**. Because style may be present int a .wpc file, you might be asked what to do with QML file: you may choose a folder to save them; or just use them as temporary files.

@@ -94,7 +94,7 @@ def controlVisibilityByPercentilesArray(attribute, percentiles, feature, parent,
         maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1])
 
         if currentZoom >= minZoom and currentZoom <= maxZoom:
-            attrValue = float(feature[attribute])  
+            attrValue = float(feature[attribute])
             attrCollection = []
 
             if currentZoom == maxZoom and (attrValue == NULL or attrValue is None):
@@ -185,7 +185,7 @@ def controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment,
                 return 1
         
             fromMinOffset = currentZoom - minZoom if currentZoom >= minZoom else 0
-            percentile = minPercentile + (_increment*fromMinOffset)
+            percentile = Utils.boundValue(minPercentile + (_increment*fromMinOffset), minPercentile, 100)
             percentileVar = f'_layer_percentile_{percentile}'
             percentileResult = context.cachedValue(percentileVar)
 

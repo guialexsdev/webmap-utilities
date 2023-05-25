@@ -88,3 +88,4 @@ class Utils:
     def scaleToZoomLevel(availableScales: list[float], scale: float):
         aproxScale = min(availableScales, key=lambda x:abs(x-scale))
         return availableScales.index(aproxScale)
+    
