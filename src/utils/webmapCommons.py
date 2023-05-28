@@ -9,7 +9,14 @@ class Utils:
             return feature[prop]
         except:
             return NULL
-        
+
+    def getFloatAttribute(feature, prop):
+        try:
+            rawValue = feature[prop] 
+            return float(rawValue) if rawValue != 'NULL' and rawValue != NULL else 0
+        except:
+            return None
+              
     def getCachedLayerTag(context: QgsExpressionContext):
         tagFound = context.cachedValue('webmap_current_tag')
 
@@ -66,7 +73,10 @@ class Utils:
             if value != NULL and value is not None:
                 return ('var', value)
             else:
-                return ('default', default)
+                if default is None:
+                    raise Exception(f"{prop} not found. Was this property added to your tag or layer attribute's table?")
+                else:
+                    return ('default', default)
 
     def strToArrayOfStrings(value: str, separator = ';'):
         return value.split(separator)

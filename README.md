@@ -24,25 +24,33 @@ Here is a list of features we provide:
 
 ## Installing
 
-In QGis, install Webmap Utilities through the menu **Plugins -> Manage and Install Plugins**. Search for 'Webmap Utilities' and install. It may be necessary, in the Settings tab in the plugin manager, to check the option **Show also Experimental Plugins**.
-
-Acesse as ferramentas do plugin clicando com o botão direito do mouse em qualquer lugar na barra de ferramentas e selecionando **Webmap Utilities Toolbar**
-
-![](/images/toolbar.png)
+Click here to download the zip file. To install, open Qgis and go to Plugins -> Manage and Install Plugins -> Install from ZIP.
 
 ## Quick Tutorial
 
 Before continuing, download this vector layer and this style (QML). The layer contains cities of Pensilvania state, EUA. It will be used in this tutorial.
 
+### Preparing your project
+
+You can get access to the plugin's tools by just right-clicking anywhere in icons toolbar and choosing **Webmap Plugin Toolbar**. Then, click ![](/images/configure_project.png) button to initialize your project. It will save some predefined settings to your project variables and add predefined scales that corresponds to the zoom level range of 0-20. You only need to do it once and after that all buttons will be available.
+
+![](/images/toolbar_only.png)
+
 ### Controlling visibility of a layer
 
 One of the first problems when designing a webmap is to decide what will be shown at each zoom level or scale. Say that our cities has a visibility range that begins at level 5 and finishes at level 15. Of course you can do this by just using the **Scale dependent visibility** option that Qgis already offer, but you need to memorize which scale corresponds to which zoom level. To avoid it you may use our **Set layer zoom level visibility** tool, that works with zoom levels instead of scales. Right-click a layer to get access to that option.
 
+![](/images/set_visibility_by_zoom_level.png)
+
 But what if you add another layer of cities to the project? You will certainly need to set visibility again, one more time for each extra layer you add. Not a big problem yet, but it will be, as soon as you have a map with many layers that need to be replicated to another area. And what if you need to show at level 4 only a single feature, an important feature? To resolve these and other problems we propose a tagging system: tags that identifies your layers and control them by default or user defined properties. So, let us define a tag and 2 properties to control the visibility of our layer.
+
+![](/images/city_tag_properties.png)
 
 Click ![](/images/settings.png) **Settings** button. The first screen is the one that manages all tags of a project. Click ![](/images/symbologyAdd.png) **Add new tag...** to insert a new tag. Give it meaningful name like **city**. And before proceed, make sure that our layer begins with the word **city**, that is how the plugin recognize that a layer belongs to a tag. Now right click the tag name and then **Add property**. Open the list of properties and select `_zoom_min`. In value field type the number 5. Every layer tagged with the word **city** will only be visbile at zoom level 5. Click OK and repeat the process to add the property `_zoom_max` with value 15. Exit Settings screen pressing OK to see the result. Now go to the labels properties of the layer and then to **Rendering** properties. Edit Data Defined Override of **Show label** option and type the following function:
 
 `controlVisibility()`
+
+![](/images/normal_visibility.png)
 
 Go back to the canvas and zoom in and zoom out in order to see the results. In fact, visually we have the same effect as before, but the advantage is that now every layer tagged as **city** will only become visible in the range we defined with zoom min and zoom max properties.
 
@@ -56,6 +64,8 @@ To implement that strategy, go to **Show label** option set another function:
 
 `controlVisibilityByPercentilesIncrement('population', 1, 10)`
 
+![](/images/percentiles_increment_1.png)
+
 Here is what this function does: at first zoom level available (= 5), 1% of the highest population cities will be visible. At the next zoom level, 1% + 10% of the highest population will be visible. From zoom level 15 onwards, 100% of the cities will be visible on the map. And if you have a list of predefined percentiles, you can use a similar function called controlVisibilityByPercentilesArray:
 
 `controlVisibilityByPercentilesArray('population', array(1,20,50,100))`
@@ -68,23 +78,25 @@ It is sometimes useful to increase label size as the zoom level increases. This 
 
 `controlByIncrement(1, 7, 15)`
 
-The first number indicates an ammount of increment per zoom level. The second number is the minimum size, when zoom level = 5 (remeber we defined number 5 as the minimum zoom level). The third number is the maximum size. So, our labels begins at size = 7 and will growing up to size = 15, adding 1 at each level. You can use the alternative `controlByIncrementRelativeMax(1, 7, 8)`, where the third parameter means an offset from minimum size. Finally, you can use array, as we did in last section:
+The first number indicates an ammount of increment per zoom level. The second number is the minimum size, when zoom level = 5 (remeber we defined number 5 as the minimum zoom level). The third number is the maximum size. So, our labels begins at size = 7 and will growing up to size = 15, adding 1 at each level. You can use the alternative `controlByIncrementOffset(1, 7, 8)`, where the third parameter means an offset from minimum size. Finally, you can use array, as we did in last section:
 
 `controlByArray(array(7,8,9,10,11,12,13,14,15))`
 
 Another function, if you don't care about how much the value will increase, is the following:
 
-`controlByMinMaxNorm(7,15)`
+`controlByMinMax(7,15)`
 
 Basically, min-max normalization will be applied to your value range (7-15) considering zoom min and zoo max previously defined. You will see labels size uniformly increasing as zoom goes up.
 
 Now lets think about cities again. Obviously, there are cities more importante than others in terms of population. It will be a good idea do give a bigger font size to bigger cities. So go to the layer Properties -> Labels -> Text and add the following function to the Data Defined Override option of **Size** field:
 
-`controlByMinMaxNormRelativeMax(scaleExponential('population', 50, 0.5, 3, 8), 7)`
+`controlByMinMaxOffset(scaleExponential('population', 50, 0.5, 3, 8), 7)`
 
-Note that we are using MinMax normalization, so we don't care about the increase value per zoom level. Just two parameters are required: min size and max size. And note that the function `scaleExponential('population', 50, 0.5, 3, 8)` is telling us that the minimum size is variable in a exponential fashion: less populous cities begins at size = 3; most populous cities begins at size = 8. It works just like `scale_exp`, provided by QGis, but here you don't need to know the exact value of the highest and lowest populations. Another difference is the second parameter: if you have cities with population absurdly higher than other you may want to decrease this value. Finally, the second argument of `controlByMinMaxNormRelativeMax` is the offset relative to minimum value: if minimum value is 3, then size will increase up to 7 + 3 = 10; if minimum value is 8, then size will increase up to 7 + 8 = 15.
+Note that we are using MinMax normalization, so we don't care about the increase value per zoom level. Just two parameters are required: min size and max size. And note that the function `scaleExponential('population', 50, 0.5, 3, 8)` is telling us that the minimum size is variable in a exponential fashion: less populous cities begins at size = 3; most populous cities begins at size = 8. It works just like `scale_exp`, provided by QGis, but here you don't need to know the exact value of the highest and lowest populations. Another difference is the second parameter: if you have cities with population absurdly higher than other you may want to decrease this value. Finally, the second argument of `controlByMinMaxOffset` is the offset relative to minimum value: if minimum value is 3, then size will increase up to 7 + 3 = 10; if minimum value is 8, then size will increase up to 7 + 8 = 15.
 
-Understand that you can use all the above function not only for size field of a label. You can use it to transparency fields, color fields (in this case using arrays only) etc.
+![](/images/scale_exp_min_max_offset2.png)
+
+Understand that you can use all the above functions not only for size field of a label. You can use it to transparency fields, color fields (in this case using arrays only) etc.
 
 ### Automate OSM download using `_osm_query` property
 
@@ -97,6 +109,8 @@ Go to ![](/images/settings.png) **Settings** and then create another tag called 
 * highway=primary_trunk
 
 Now add the property `_geometry_type` e choose the value `lines`. We are just telling OSM downloader the geometry type of roads (they are lines, of course).
+
+![](/images/osm_road.png)
 
 Apply and close the Settings dialog and click on ![](/images/osm.png) button. Choose a CRS and an extent. Field **Tags** will be by default initialized with all tags that have `_osm_query` and `_geometry_type` properties, as they are required to download data from OSM. Click Run to start downloading.
 
@@ -122,6 +136,8 @@ You can can create property `label_size_min` and use it like this:
 
 To create a property, go to ![](/images/settings.png) **Settings** -> **Properties** -> **Add new property**.
 
+![](/images/add_property.png)
+
 ### Generating a Shaded Relief
 
 **Using the tagging system is not required here**
@@ -132,7 +148,7 @@ In addition, both layers receive the Aerial Perspective effect: the higher the l
 
 Click on ![](/images/relief_creator.png) button to generate a Shaded Relief. The option **Aerial Perspective Intensity**, always between 0 and 100, increase/decrease the contrast between higher and lower altitudes. And the option **Angle Between Light Sources** controls the angle between the light sources: a number between 30 - 70 is generally a good choice; values close to 180 usually gives an undesirable plastic effect.
 
-Remember that layers are generated in the order they need to be, so its a good idea to rename them to something like "hillshade top" and "hillshade bottom".
+Remember that layers are generated in the order they need to be, so its a good idea to rename them to something like "hillshade top" and "hillshade bottom". After these steps, put you colored DEM file below 'hillshade bottom' layer.
 
 ### Exporting settings
 

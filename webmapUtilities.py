@@ -21,16 +21,18 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 import math
 import os.path
 
-from qgis.core import QgsProject, QgsExpressionContextUtils, QgsMessageLog
+from qgis.core import QgsProject, QgsExpressionContextUtils
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QMessageBox, QToolBar, QComboBox, QLabel
 
 from .resources import *
+from .src.utils.logUtils import info
 from .src.expressions.generalControlExpessions import *
 from .src.expressions.visibilityControlExpressions import *
 from .src.utils.layerTreeOrganizer import LayerTreeOrganizer
@@ -96,6 +98,8 @@ class WebmapUtilities:
         self.actions.append(self.toolbar.addWidget(widget))
 
     def initGui(self):
+        info('Initializing Plugin')
+
         self.toolbar = None
         for toolbar in self.iface.mainWindow().findChildren(QToolBar):
             if toolbar.objectName() == 'WebmapToolbar':
@@ -106,10 +110,11 @@ class WebmapUtilities:
                     self.toolbar.removeAction(action)
 
         if self.toolbar is None:
+            info('Toolbar not found. Creating Webmap Utilities Toolbar')
             self.createToolbar("Webmap Utilities Toolbar")
 
         isProjectInitialized = self.isProjectInitialized()
-        QgsMessageLog.logMessage(str(isProjectInitialized), "Webmap Plugin Flow")
+        info('Current project not initialized')
 
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         self.addButtonToCustomToolbar(
@@ -170,6 +175,7 @@ class WebmapUtilities:
         self.iface.currentLayerChanged.connect(self.currentLayerChanged)
 
     def unload(self):
+        info('Unloading plugin')
         self.iface.layerTreeView().contextMenuAboutToShow.disconnect(self.contextMenuAboutToShow)
         self.iface.currentLayerChanged.disconnect(self.currentLayerChanged)
 
@@ -185,6 +191,7 @@ class WebmapUtilities:
             action.setEnabled(enabled)
 
     def onProjectRead(self):
+        info('Project read. Toggle required actions')
         self.setRequiredActionsEnabled(self.isProjectInitialized())
 
     def runConfigureProject(self):
@@ -320,6 +327,7 @@ class WebmapUtilities:
         self.updateZoomLevelWidget()
     
     def addZoomLevelWidget(self):
+        info("Adding zoom level widget")
         if self.zoomLevelComboWidget is not None:
             self.zoomLevelComboWidget.currentIndexChanged.disconnect(self.updateScale)
             self.iface.mapCanvas().scaleChanged.disconnect(self.updateZoomLevelWidget)

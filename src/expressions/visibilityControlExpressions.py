@@ -1,9 +1,11 @@
 from qgis.core import qgsfunction, NULL, QgsExpressionContext
+from ..utils.logUtils import error
 from ..utils.webmapCommons import Utils
 import numpy as np
+import traceback
 
-@qgsfunction(args='auto', group='Webmap - Visibility', referenced_columns=['_zoom_min','_zoom_max'])
-def controlVisibility(feature, parent, context):
+@qgsfunction(args='auto', group='Webmap - Visibility')
+def controlVisibility(minZoom, maxZoom, feature, parent, context):
     """
     controlVisibilityOffset()<br><br>
     Controls features visibility by _zoom_min and _zoom_max properties. If a feature don't have these properties or they are NULL, 
@@ -15,13 +17,14 @@ def controlVisibility(feature, parent, context):
     key = Utils.getCachedLayerTag(context)
 
     currentZoom = context.variable('zoom_level') + 1
-    minZoom = int(Utils.getVariable(key, '_zoom_min', feature)[1])
-    maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1])
+    
+    _minZoom = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
+    _maxZoom = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom)
 
-    return 1 if currentZoom >= minZoom and currentZoom <= maxZoom else 0
+    return 1 if currentZoom >= _minZoom and currentZoom <= _maxZoom else 0
 
 @qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibilityOffset(minZoomOffset, maxZoomOffset, feature, parent, context):
+def controlVisibilityOffset(minZoom, maxZoom, minZoomOffset, maxZoomOffset, feature, parent, context):
     """
     controlVisibilityOffset(minZoomOffset, maxZoomOffset)<br><br>
     Controls features visibility by _zoom_min and _zoom_max properties. This function adds an offset value to the _zoom_min and _zoom_max values,
@@ -42,13 +45,13 @@ def controlVisibilityOffset(minZoomOffset, maxZoomOffset, feature, parent, conte
     key = Utils.getCachedLayerTag(context)
 
     currentZoom = context.variable('zoom_level') + 1
-    minZoom = int(Utils.getVariable(key, '_zoom_min', feature)[1]) + minZoomOffset
-    maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1]) + maxZoomOffset 
+    _minZoom = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom) + minZoomOffset
+    _maxZoom = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom) + maxZoomOffset
 
-    return 1 if currentZoom >= minZoom and currentZoom <= maxZoom else 0
+    return 1 if currentZoom >= _minZoom and currentZoom <= _maxZoom else 0
 
 @qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibilityByPercentilesArray(attribute, percentiles, feature, parent, context: QgsExpressionContext):
+def controlVisibilityByPercentilesArray(minZoom, maxZoom, attributeName, percentiles, feature, parent, context: QgsExpressionContext):
     """
     controlVisibilityByPercentilesArray(attribute, percentiles)<br><br>
     Controls features visibility by using an array of percentiles. For example, say you have a vector layer containing cities and its populations. 
@@ -80,56 +83,52 @@ def controlVisibilityByPercentilesArray(attribute, percentiles, feature, parent,
         key = Utils.getCachedLayerTag(context)
         layer = Utils.getCurrentLayer(context)
 
+        allAttrValues = context.cachedValue('_layer_all_attrs_values')
+
+        if allAttrValues is None:            
+            allAttrValues = [Utils.getFloatAttribute(f, attributeName) for f in layer.getFeatures()]
+            context.setCachedValue('_layer_all_attrs_values', allAttrValues)
+
         maxAttrCacheVar = context.cachedValue('_layer_max')
 
         if maxAttrCacheVar is not None:
             maxAttr = maxAttrCacheVar
         else:
-            idx = layer.fields().indexFromName(attribute)
-            maxAttr = float(layer.maximumValue(idx))
+            maxAttr = max(allAttrValues)
             context.setCachedValue('_layer_max', maxAttr)
 
         currentZoom = context.variable('zoom_level') + 1
-        minZoom = int(Utils.getVariable(key, '_zoom_min', feature)[1])
-        maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1])
+        _minZoom = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
+        _maxZoom = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom)
 
-        if currentZoom >= minZoom and currentZoom <= maxZoom:
-            attrValue = float(feature[attribute])
-            attrCollection = []
+        if currentZoom >= _minZoom and currentZoom <= _maxZoom:
+            attrValue = Utils.getFloatAttribute(feature, attributeName)
 
-            if currentZoom == maxZoom and (attrValue == NULL or attrValue is None):
+            if currentZoom == _maxZoom and (attrValue == NULL or attrValue is None):
                 return 1
             
             _percentiles = Utils.strToArrayOfNumbers(Utils.getVariable(key, percentiles, feature)[1]) if isinstance(percentiles, str) else percentiles
 
-
-            fromMinOffset = currentZoom - minZoom
+            fromMinOffset = currentZoom - _minZoom
             percentileIndex = Utils.boundValue(fromMinOffset, 0, len(_percentiles) - 1)
-            percentile = _percentiles[percentileIndex]
+            percentile = _percentiles[int(percentileIndex)]
             
             percentileVar = f'_layer_percentile_{percentile}'
             percentileResult = context.cachedValue(percentileVar)
 
-            if percentileResult is not None:
-                percentileResult = percentileResult
-            else:
-                for f in layer.getFeatures():
-                    vAttr = f[attribute]
-                    if (vAttr != NULL):
-                        attrCollection.append(maxAttr - float(vAttr))
-
-                percentileResult = np.percentile(attrCollection, percentile)
+            if percentileResult is None:
+                percentileResult = np.percentile(allAttrValues, 100 - percentile)
                 context.setCachedValue(percentileVar, percentileResult)
 
-            inverseAttr = maxAttr if attrValue == NULL else maxAttr - attrValue
-            return 1 if inverseAttr <= percentileResult else 0
+            return 1 if attrValue >= percentileResult else 0
         else:
             return 0
     except Exception as e:
+        error(str(traceback.format_exc()))
         return 0
     
 @qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment, feature, parent, context):
+def controlVisibilityByPercentilesIncrement(minZoom, maxZoom, attributeName, minPercentile, increment, feature, parent, context):
     """
     controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment)<br><br>
     Controls features visibility by using a minimum percentile value that will be automaticaly incremented. 
@@ -163,28 +162,32 @@ def controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment,
         key = Utils.getCachedLayerTag(context)
         layer = Utils.getCurrentLayer(context)
 
+        allAttrValues = context.cachedValue('_layer_all_attrs_values')
+
+        if allAttrValues is None:            
+            allAttrValues = [Utils.getFloatAttribute(f, attributeName) for f in layer.getFeatures()]
+            context.setCachedValue('_layer_all_attrs_values', allAttrValues)
+
         maxAttrCacheVar = context.cachedValue('_layer_max')
 
         if maxAttrCacheVar is not None:
             maxAttr = maxAttrCacheVar
         else:
-            idx = layer.fields().indexFromName(attribute)
-            maxAttr = float(layer.maximumValue(idx))
+            maxAttr = max(allAttrValues)
             context.setCachedValue('_layer_max', maxAttr)
 
         currentZoom = context.variable('zoom_level') + 1
-        minZoom = int(Utils.getVariable(key, '_zoom_min', feature)[1])
-        maxZoom = int(Utils.getVariable(key, '_zoom_max', feature)[1])
+        _minZoom = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
+        _maxZoom = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom)
         _increment = float(Utils.getVariable(key, increment, feature)[1] if isinstance(increment, str) else increment)
 
-        if currentZoom >= minZoom and currentZoom <= maxZoom:
-            attrValue = float(feature[attribute])
-            attrCollection = []
+        if currentZoom >= _minZoom and currentZoom <= _maxZoom:
+            attrValue = Utils.getFloatAttribute(feature, attributeName)
 
-            if currentZoom == maxZoom and (attrValue == NULL or attrValue is None):
+            if currentZoom == _maxZoom and (attrValue == NULL or attrValue is None):
                 return 1
         
-            fromMinOffset = currentZoom - minZoom if currentZoom >= minZoom else 0
+            fromMinOffset = currentZoom - _minZoom if currentZoom >= _minZoom else 0
             percentile = Utils.boundValue(minPercentile + (_increment*fromMinOffset), minPercentile, 100)
             percentileVar = f'_layer_percentile_{percentile}'
             percentileResult = context.cachedValue(percentileVar)
@@ -192,16 +195,10 @@ def controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment,
             if percentileResult is not None:
                 percentileResult = percentileResult
             else:
-                for f in layer.getFeatures():
-                    vAttr = f[attribute]
-                    if (vAttr != NULL):
-                        attrCollection.append(maxAttr - float(vAttr))
-
-                percentileResult = np.percentile(attrCollection, percentile)
+                percentileResult = np.percentile(allAttrValues, 100 - percentile)
                 context.setCachedValue(percentileVar, percentileResult)
 
-            inverseAttr = float(maxAttr) if attrValue == NULL else float(maxAttr) - float(attrValue)
-            return 1 if inverseAttr <= percentileResult else 0
+            return 1 if attrValue >= percentileResult else 0
         else:
             return 0
     except Exception as e:
