@@ -6,6 +6,10 @@ def zoomLevel(feature, parent, context):
     return context.variable('zoom_level') + 1
 
 @qgsfunction(args='auto', group='Webmap - General')
+def numericPropertyOf(tagName, propertyName, feature, parent, context):
+    return float(Utils.getVariable(tagName, propertyName)[1])
+
+@qgsfunction(args='auto', group='Webmap - General')
 def incrementPerZoom(minZoom, increment, minValue, maxValue, feature, parent, context):
     """
     incrementPerZoom(minZoom, increment, minValue, maxValue)<br><br>
@@ -71,11 +75,12 @@ def incrementPerZoomOffset(minZoom, increment, minValue, fromMinOffset, feature,
 
     key = Utils.getCachedLayerTag(context)
 
-    currentZoom = context.variable('zoom_level') + 1
-    _minZoom    = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
-    _minValue   = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
-    _maxValue   = _minValue + fromMinOffset
-    _increment  = float(Utils.getVariable(key, increment, feature)[1] if isinstance(increment, str) else increment)
+    currentZoom    = context.variable('zoom_level') + 1
+    _minZoom       = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
+    _minValue      = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
+    _fromMinOffset = float(Utils.getVariable(key, fromMinOffset, feature)[1] if isinstance(fromMinOffset, str) else fromMinOffset)
+    _maxValue      = _minValue + _fromMinOffset
+    _increment     = float(Utils.getVariable(key, increment, feature)[1] if isinstance(increment, str) else increment)
 
     _size = float(_minValue + (currentZoom - _minZoom) * _increment)
 
@@ -137,6 +142,12 @@ def normalizeZoomRange(minZoom, maxZoom, minValue, maxValue, feature, parent, co
     normalizeZoomRange(5, 10, 1, 8) -> between zoom level 5 and 10, value should be increased from 1 to 8.
     normalizeZoomRange('_zoom_min', '_zoom_max', '_label_min_size', '_label_max_size') -> the same as before, but using properties.
     """
+    result = None
+    masterCache = f'{feature.id()}_{minZoom}_{maxZoom}_{minValue}_{maxValue}'
+
+    if context.hasCachedValue(masterCache):
+        return context.cachedValue(masterCache)
+    
     key = Utils.getCachedLayerTag(context)
 
     currentZoom = context.variable('zoom_level') + 1
@@ -146,7 +157,9 @@ def normalizeZoomRange(minZoom, maxZoom, minValue, maxValue, feature, parent, co
     _maxValue = float(Utils.getVariable(key, maxValue, feature)[1] if isinstance(maxValue, str) else maxValue)
     _normalizedValue = Utils.normalizeMinMax(currentZoom, _minZoom, _maxZoom, _minValue, _maxValue)
 
-    return Utils.boundValue(_normalizedValue, _minValue, _maxValue)
+    result = Utils.boundValue(_normalizedValue, _minValue, _maxValue)
+    context.setCachedValue(masterCache, result)
+    return result
 
 @qgsfunction(args='auto', group='Webmap - General')
 def normalizeZoomRangeOffset(minZoom, maxZoom, minValue, fromMinOffset, feature, parent, context):
@@ -172,16 +185,25 @@ def normalizeZoomRangeOffset(minZoom, maxZoom, minValue, fromMinOffset, feature,
     normalizeZoomRangeOffset(5, 10, 1, 7) -> between zoom level 5 and 10, value should be increased from 1 to 8 (1 + 7).
     normalizeZoomRangeOffset('_zoom_min', '_zoom_max', '_label_min_size', '_label_offset_size') -> the same as before, but using properties.
     """
+    result = None
+    masterCache = f'{feature.id()}_{minZoom}_{maxZoom}_{minValue}_{fromMinOffset}'
+
+    if context.hasCachedValue(masterCache):
+        return context.cachedValue(masterCache)
+    
     key = Utils.getCachedLayerTag(context)
 
-    currentZoom = context.variable('zoom_level') + 1
-    _minZoom = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
-    _maxZoom = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom)
-    _minValue = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
-    _maxValue = _minValue + fromMinOffset
+    currentZoom      = context.variable('zoom_level') + 1
+    _minZoom         = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
+    _maxZoom         = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom)
+    _minValue        = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
+    _fromMinOffset   = float(Utils.getVariable(key, fromMinOffset, feature)[1] if isinstance(fromMinOffset, str) else fromMinOffset)
+    _maxValue        = _minValue + _fromMinOffset
     _normalizedValue = Utils.normalizeMinMax(currentZoom, _minZoom, _maxZoom, _minValue, _maxValue)
 
-    return _normalizedValue#Utils.boundValue(_normalizedValue, _minValue, _maxValue)
+    result = Utils.boundValue(_normalizedValue, _minValue, _maxValue)
+    context.setCachedValue(masterCache, result)
+    return result
 
 @qgsfunction(args='auto', group='Webmap - General')
 def normalizeAttribute(attributeName, minValue, maxValue, feature, parent, context):

@@ -299,6 +299,7 @@ class WebmapUtilities:
             targetScale = min(predefinedScales, key=lambda x:abs(x-scale))
             zoomLevelComboIndex = predefinedScales.index(targetScale)
             self.zoomLevelComboWidget.setCurrentIndex(zoomLevelComboIndex)
+            QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), 'zoomLevel', zoomLevelComboIndex)
 
     def updateScale(self, index):
         if index == None or index < 0:

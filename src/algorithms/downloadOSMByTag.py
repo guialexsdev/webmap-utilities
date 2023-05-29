@@ -157,12 +157,37 @@ class DownloadOsmByTag(QgsProcessingAlgorithm):
                 'OUTPUT': QgsProcessing.TEMPORARY_OUTPUT
             }
             outputs['ReprojectLayer'] = processing.run('native:reprojectlayer', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
+           
+            step = step + 1
+            feedback.setCurrentStep(step)
+            if feedback.isCanceled():
+                return {}
 
-            finalLayer = context.temporaryLayerStore().mapLayer(outputs['ReprojectLayer']['OUTPUT'])
+            # Create spatial index
+            alg_params = {
+                'INPUT': outputs['ReprojectLayer']['OUTPUT']
+            }
+            outputs['CreateSpatialIndex'] = processing.run('native:createspatialindex', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
+            
+            step = step + 1
+            feedback.setCurrentStep(step)
+            if feedback.isCanceled():
+                return {}
+            
+            alg_params = {
+                'CLIP': True,
+                'EXTENT': parameters['extent'],
+                'INPUT': outputs['CreateSpatialIndex']['OUTPUT'],
+                'OUTPUT': QgsProcessing.TEMPORARY_OUTPUT
+            }
+            outputs['ExtractclipByExtent'] = processing.run('native:extractbyextent', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
+            
+            finalLayer = context.temporaryLayerStore().mapLayer(outputs['ExtractclipByExtent']['OUTPUT'])
             finalLayer.setName(tag)
             QgsProject.instance().addMapLayer(finalLayer)
 
-            results[tag] = outputs['ReprojectLayer']['OUTPUT']
+            results[tag] = outputs['ExtractclipByExtent']['OUTPUT']
+
         return results
 
     def name(self):
