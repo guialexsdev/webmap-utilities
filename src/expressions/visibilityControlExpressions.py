@@ -1,18 +1,27 @@
+import numpy as np
+import traceback
 from qgis.core import qgsfunction, NULL, QgsExpressionContext
 from ..utils.logUtils import error
 from ..utils.webmapCommons import Utils
-import numpy as np
-import traceback
 
 @qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibility(minZoom, maxZoom, feature, parent, context):
+def visibilityByZoomRange(minZoom, maxZoom, feature, parent, context):
     """
-    controlVisibilityOffset()<br><br>
-    Controls features visibility by _zoom_min and _zoom_max properties. If a feature don't have these properties or they are NULL, 
-    then the TAG property will be used. Note that this function do not override the 'Scale Dependent Visibility' option of a layer.
+    visibilityByZoomRange()<br><br>
+    Controls features visibility by minZoom and maxZoom range. If current zoom level is outside the given range, feature won't be visible.
+    Note that this function do not override the 'Scale Dependent Visibility' option of a layer.
     <br>
+
+    <h2>Parameters</h2>
+    <ul>
+      <li><b>minZoom</b>: minimum zoom (inclusive)</li>
+      <li><b>maxZoom</b>: maximum zoom (inclusive)</li>
+    </ul>
+
+    </br>
     <h2>Example usage:</h2>
-    controlVisibility()
+    visibilityByZoomRange(5, 10) -> feature will be visible between zoom level 5 (inclusive) and 10 (inclusive).
+    visibilityByZoomRange('_zoom_min', '_zoom_max') -> same as before, but using properties.
     """
     key = Utils.getCachedLayerTag(context)
 
@@ -24,38 +33,11 @@ def controlVisibility(minZoom, maxZoom, feature, parent, context):
     return 1 if currentZoom >= _minZoom and currentZoom <= _maxZoom else 0
 
 @qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibilityOffset(minZoom, maxZoom, minZoomOffset, maxZoomOffset, feature, parent, context):
+def visibilityByPercentilesArray(minZoom, maxZoom, attributeName, percentiles, feature, parent, context: QgsExpressionContext):
     """
-    controlVisibilityOffset(minZoomOffset, maxZoomOffset)<br><br>
-    Controls features visibility by _zoom_min and _zoom_max properties. This function adds an offset value to the _zoom_min and _zoom_max values,
-    only for the current style.If a feature don't have these properties or they are NULL, then the TAG property will be used.
-    Note that this function do not override the 'Scale Dependent Visibility' option of a layer.
-    <br>
-    <h2>Parameters</h2>
-    <ul>
-      <li><b>minZoomOffset</b>: value to be added to _zoom_min property.</li>
-      <li><b>maxZoomOffset</b>: value to be added to _zoom_max property.</li>
-    </ul>
-    <br>
-    <h2>Example usage:</h2>
-    The following example increases the visibility interval of a layer that is controlled by _zoom_min and _zoom_max properties.
-    <br>
-    controlVisibility(-1, 1)
-    """
-    key = Utils.getCachedLayerTag(context)
-
-    currentZoom = context.variable('zoom_level') + 1
-    _minZoom = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom) + minZoomOffset
-    _maxZoom = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom) + maxZoomOffset
-
-    return 1 if currentZoom >= _minZoom and currentZoom <= _maxZoom else 0
-
-@qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibilityByPercentilesArray(minZoom, maxZoom, attributeName, percentiles, feature, parent, context: QgsExpressionContext):
-    """
-    controlVisibilityByPercentilesArray(attribute, percentiles)<br><br>
+    visibilityByPercentilesArray(minZoom, maxZoom, attributeName, percentiles)<br><br>
     Controls features visibility by using an array of percentiles. For example, say you have a vector layer containing cities and its populations. 
-    So using the array arr = [5,25,50,100] and considering _zoom_min = 10 and _zoom_max = 13, it will produce the following results:
+    So using the array arr = [5,25,50,100] and considering minZoom = 10 and maxZoom = 13, it will produce the following results:
 
     <ul>
       <li><b>zoom level less than 10</b>: 5% of the cities with highest population will be shown</li>
@@ -70,13 +52,16 @@ def controlVisibilityByPercentilesArray(minZoom, maxZoom, attributeName, percent
 
     <h2>Parameters</h2>
     <ul>
-      <li><b>attribute</b>: numeric attribute name that will be used for percentile calculations (field 'population' in the case above).</li>
-      <li><b>percentiles</b>: array of percentiles OR a property name. Ex: array(5,25,5,100) ou '_cities_percentiles_array'</li>
+      <li><b>minZoom</b>: minimum zoom (inclusive)</li>
+      <li><b>maxZoom</b>: maximum zoom (inclusive)</li>
+      <li><b>attributeName</b>: name of attribute (must be numeric OR string containing only numbers) that will be used for percentile calculations.</li>
+      <li><b>percentiles</b>: array of percentiles OR a property name. Ex: array(5,25,5,100)</li>
     </ul>
+
     <br>
     <h2>Example usage:</h2>
-    controlVisibilityByPercentilesArray(array(5,25,50,100))
-    controlVisibilityByPercentilesArray('_cities_percentiles_array')
+    visibilityByPercentilesArray(5, 10, array(5,25,50,100)) -> using percentiles 5%, 25%, 50% and 100% at each zoom level between zoom 5 and 10.
+    visibilityByPercentilesArray('_zoom_min', '_zoom_max', '_cities_percentiles_array') -> same as before, but using properties.
     """
         
     try:
@@ -89,11 +74,9 @@ def controlVisibilityByPercentilesArray(minZoom, maxZoom, attributeName, percent
             allAttrValues = [Utils.getFloatAttribute(f, attributeName) for f in layer.getFeatures()]
             context.setCachedValue('_layer_all_attrs_values', allAttrValues)
 
-        maxAttrCacheVar = context.cachedValue('_layer_max')
+        maxAttr = context.cachedValue('_layer_max')
 
-        if maxAttrCacheVar is not None:
-            maxAttr = maxAttrCacheVar
-        else:
+        if maxAttr is None:
             maxAttr = max(allAttrValues)
             context.setCachedValue('_layer_max', maxAttr)
 
@@ -128,12 +111,12 @@ def controlVisibilityByPercentilesArray(minZoom, maxZoom, attributeName, percent
         return 0
     
 @qgsfunction(args='auto', group='Webmap - Visibility')
-def controlVisibilityByPercentilesIncrement(minZoom, maxZoom, attributeName, minPercentile, increment, feature, parent, context):
+def visibilityByPercentilesIncrement(minZoom, maxZoom, attributeName, increment, minPercentile, feature, parent, context):
     """
-    controlVisibilityByPercentilesIncrement(attribute, minPercentile, increment)<br><br>
-    Controls features visibility by using a minimum percentile value that will be automaticaly incremented. 
+    visibilityByPercentilesIncrement(minZoom, maxZoom, attribute, minPercentile, increment)<br><br>
+    Controls features visibility by using a minimum percentile value that will be incremented a each zoom level.
     For example, say you have a vector layer containing cities and its populations. So using minPercentile = 5, increment = 5 and 
-    considering _zoom_min = 10 and _zoom_max = 13, it will produce the following results:
+    considering minZoom = 10 and maxZoom = 13, it will produce the following results:
 
     <ul>
       <li><b>zoom level less than 10</b>: 5% of the cities with highest population will be shown</li>
@@ -148,14 +131,18 @@ def controlVisibilityByPercentilesIncrement(minZoom, maxZoom, attributeName, min
 
     <h2>Parameters</h2>
     <ul>
-      <li><b>attribute</b>: numeric attribute name that will be used for percentile calculations (field 'population' in the case above).</li>
-      <li><b>minPercentile</b>: minimum percentile number OR a property name. Ex: 5 ou '_cities_min_percentile'</li>
-      <li><b>increment</b>: value to be added to minPercentile at each zoom level. Ex: 5 ou '_cities_increment_percentile'</li>
+      <li><b>minZoom</b>: minimum zoom (inclusive)</li>
+      <li><b>maxZoom</b>: maximum zoom (inclusive)</li>
+      <li><b>attributeName</b>: name of attribute (must be numeric OR string containing only numbers) that will be used for percentile calculations.</li>
+      <li><b>increment</b>: increment that be added at each zoom level to the current percentile (starting from minPercentile)</li>
+      <li><b>minPercentile</b>: minimum percentile</li>
     </ul>
+
     <br>
+
     <h2>Example usage:</h2>
-    controlVisibilityByPercentilesIncrement(5, 5)
-    controlVisibilityByPercentilesIncrement('_cities_min_percentile', '_cities_increment_percentile')
+    visibilityByPercentilesIncrement(5, 10, 2, 5) -> from zoom 5 to 10, starting from percentile 5% and incrementing 2% eat each zoom level.
+    visibilityByPercentilesIncrement('_zoom_min', '_zoom_max', '_cities_increment_percentile', '_cities_min_percentile') -> same as before, but using properties.
     """
 
     try:
@@ -168,11 +155,9 @@ def controlVisibilityByPercentilesIncrement(minZoom, maxZoom, attributeName, min
             allAttrValues = [Utils.getFloatAttribute(f, attributeName) for f in layer.getFeatures()]
             context.setCachedValue('_layer_all_attrs_values', allAttrValues)
 
-        maxAttrCacheVar = context.cachedValue('_layer_max')
+        maxAttr = context.cachedValue('_layer_max')
 
-        if maxAttrCacheVar is not None:
-            maxAttr = maxAttrCacheVar
-        else:
+        if maxAttr is None:
             maxAttr = max(allAttrValues)
             context.setCachedValue('_layer_max', maxAttr)
 

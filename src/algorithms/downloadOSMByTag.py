@@ -179,3 +179,20 @@ class DownloadOsmByTag(QgsProcessingAlgorithm):
 
     def createInstance(self):
         return DownloadOsmByTag()
+    
+    def shortHelpString(self):
+        return """
+Download OSM data of all tagged layers. Tagged layers must contain "_osm_query" and "_geometry_type" properties!
+        <h2>Input parameters</h2>
+        <h3>CRS</h3>
+Output CRS of downloaded layers.
+        <h3>Extent</h3>
+Extent of downloaded layers
+        <h3>Tags</h3>
+List of tags available for download. All tags checked as default.
+        <h2>Outputs</h2>
+        <h3>Vector layer per tag</h3>
+        <p>Multiple temporary layers will be added to the project, each one representing a tag.</p>
+        <br />
+        <p align="right">Algorithm author: Guilherme Alexsander Pereira (guilhermealexs.dev@gmail.com)</p>
+        """
