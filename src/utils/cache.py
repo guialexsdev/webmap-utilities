@@ -1,5 +1,4 @@
-
-from src.utils.webmapCommons import Utils
+from ..utils.logUtils import info
 
 
 class Cache:
@@ -8,8 +7,8 @@ class Cache:
 
     def cachedSection(self, key, work):
         value = self.context.cachedValue(key)
-        
-        if value is None:            
+
+        if value is None:
             value = work()
             self.context.setCachedValue(key, value)
         

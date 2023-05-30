@@ -1,6 +1,7 @@
 import numpy as np
 import traceback
 from qgis.core import qgsfunction, NULL, QgsExpressionContext, QgsFeature
+from ..utils.cache import Cache
 from ..utils.logUtils import error, info
 from ..utils.webmapCommons import Utils
 
@@ -23,14 +24,19 @@ def visibilityByZoomRange(minZoom, maxZoom, feature, parent, context):
     visibilityByZoomRange(5, 10) -> feature will be visible between zoom level 5 (inclusive) and 10 (inclusive).
     visibilityByZoomRange('_zoom_min', '_zoom_max') -> same as before, but using properties.
     """
-    key = Utils.getCachedLayerTag(context)
+    def work():
+        key = Utils.getCachedLayerTag(context)
 
-    currentZoom = context.variable('zoom_level') + 1
+        currentZoom = context.variable('zoom_level') + 1
+        
+        _minZoom = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
+        _maxZoom = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom)
+
+        return 1 if currentZoom >= _minZoom and currentZoom <= _maxZoom else 0
     
-    _minZoom = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
-    _maxZoom = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom)
-
-    return 1 if currentZoom >= _minZoom and currentZoom <= _maxZoom else 0
+    cache = Cache(context)
+    resultCacheKey = f'{feature.id()}_{minZoom}_{maxZoom}'
+    return cache.cachedSection(resultCacheKey, work)
 
 @qgsfunction(args='auto', group='Webmap - Visibility')
 def visibilityByPercentilesArray(minZoom, maxZoom, attributeName, percentiles, feature: QgsFeature, parent, context: QgsExpressionContext):
@@ -63,25 +69,11 @@ def visibilityByPercentilesArray(minZoom, maxZoom, attributeName, percentiles, f
     visibilityByPercentilesArray(5, 10, array(5,25,50,100)) -> using percentiles 5%, 25%, 50% and 100% at each zoom level between zoom 5 and 10.
     visibilityByPercentilesArray('_zoom_min', '_zoom_max', '_cities_percentiles_array') -> same as before, but using properties.
     """
-    result = None
-    masterCache = f'{feature.id()}_{minZoom}_{maxZoom}_{attributeName}_{str(percentiles)}'
-
-    if context.hasCachedValue(masterCache):
-        return context.cachedValue(masterCache)
-
-    try:
+    def work():
         key = Utils.getCachedLayerTag(context)
         layer = Utils.getCurrentLayer(context)
 
-        allAttrValues = context.cachedValue('_layer_all_attrs_values')
-        if allAttrValues is None:            
-            allAttrValues = [Utils.getFloatAttribute(f, attributeName) for f in layer.getFeatures()]
-            context.setCachedValue('_layer_all_attrs_values', allAttrValues)
-
-        maxAttr = context.cachedValue('_layer_max')
-        if maxAttr is None:
-            maxAttr = max(allAttrValues)
-            context.setCachedValue('_layer_max', maxAttr)
+        allAttrValues = cache.cachedSection('_layer_all_attrs_values', lambda: [Utils.getFloatAttribute(f, attributeName) for f in layer.getFeatures()])
 
         currentZoom = float(context.variable('zoom_level')) + 1
         _minZoom = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
@@ -99,21 +91,14 @@ def visibilityByPercentilesArray(minZoom, maxZoom, attributeName, percentiles, f
             percentileIndex = Utils.boundValue(fromMinOffset, 0, len(_percentiles) - 1)
             percentile = _percentiles[int(percentileIndex)]
 
-            percentileVar = f'_layer_percentile_{percentile}'
-            percentileResult = context.cachedValue(percentileVar)
-            if percentileResult is None:
-                percentileResult = np.percentile(allAttrValues, 100 - percentile)
-                context.setCachedValue(percentileVar, percentileResult)
-
-            result = 1 if attrValue >= percentileResult else 0
+            percentileResult = cache.cachedSection(f'_layer_percentile_{percentile}', lambda: np.percentile(allAttrValues, 100 - percentile))
+            return 1 if attrValue >= percentileResult else 0
         else:
-            result = 0
-    except Exception as e:
-        error(str(traceback.format_exc()))
-        result = 0
-    
-    context.setCachedValue(masterCache, result)
-    return result
+            return 0
+
+    cache = Cache(context)
+    resultCacheKey = f'{feature.id()}_{minZoom}_{maxZoom}_{attributeName}_{str(percentiles)}'
+    return cache.cachedSection(resultCacheKey, work)
 
 @qgsfunction(args='auto', group='Webmap - Visibility')
 def visibilityByPercentilesIncrement(minZoom, maxZoom, attributeName, increment, minPercentile, feature, parent, context):
@@ -149,14 +134,7 @@ def visibilityByPercentilesIncrement(minZoom, maxZoom, attributeName, increment,
     visibilityByPercentilesIncrement(5, 10, 2, 5) -> from zoom 5 to 10, starting from percentile 5% and incrementing 2% eat each zoom level.
     visibilityByPercentilesIncrement('_zoom_min', '_zoom_max', '_cities_increment_percentile', '_cities_min_percentile') -> same as before, but using properties.
     """
-
-    result = None
-    masterCache = f'{feature.id()}_{minZoom}_{maxZoom}_{attributeName}_{increment}_{minPercentile}'
-
-    if context.hasCachedValue(masterCache):
-        return context.cachedValue(masterCache)
-    
-    try:
+    def work():
         key = Utils.getCachedLayerTag(context)
         layer = Utils.getCurrentLayer(context)
 
@@ -165,12 +143,6 @@ def visibilityByPercentilesIncrement(minZoom, maxZoom, attributeName, increment,
         if allAttrValues is None:            
             allAttrValues = [Utils.getFloatAttribute(f, attributeName) for f in layer.getFeatures()]
             context.setCachedValue('_layer_all_attrs_values', allAttrValues)
-
-        maxAttr = context.cachedValue('_layer_max')
-
-        if maxAttr is None:
-            maxAttr = max(allAttrValues)
-            context.setCachedValue('_layer_max', maxAttr)
 
         currentZoom = context.variable('zoom_level') + 1
         _minZoom = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
@@ -194,11 +166,10 @@ def visibilityByPercentilesIncrement(minZoom, maxZoom, attributeName, increment,
                 percentileResult = np.percentile(allAttrValues, 100 - percentile)
                 context.setCachedValue(percentileVar, percentileResult)
 
-            result = 1 if attrValue >= percentileResult else 0
+            return 1 if attrValue >= percentileResult else 0
         else:
-            result = 0
-    except Exception as e:
-        result = 0
-        
-    context.setCachedValue(masterCache, result)
-    return result
+            return 0
+
+    cache = Cache(context)
+    resultCacheKey = f'{feature.id()}_{minZoom}_{maxZoom}_{attributeName}_{increment}_{minPercentile}'
+    return cache.cachedSection(resultCacheKey, work)

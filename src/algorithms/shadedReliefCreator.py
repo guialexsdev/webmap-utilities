@@ -229,9 +229,9 @@ Increase/decrease the contrast between higher and lower altitudes
         <h3>Angle Between Light Sources</h3>
 Angle between the two light sources. Valid values: 0 - 180. Avoid extreme values, you should stay between 30 - 70 for better results.
         <h3>Z factor</h3>
-Vertical exaggeration. This parameter is useful when the Z units differ from the X and Y units, for example feet and meters. You can use this parameter to adjust for this. Increasing the value of this parameter will exaggerate the final result (making it look more “hilly”). The default is 1 (no exaggeration). (FONT: QGis documentation)
+Vertical exaggeration. This parameter is useful when the Z units differ from the X and Y units, for example feet and meters. You can use this parameter to adjust for this. Increasing the value of this parameter will exaggerate the final result (making it look more “hilly”). The default is 1 (no exaggeration).
         <h3>Scale</h3>
-Ratio of vertical units to horizontal (FONT: QGis documentation)
+Ratio of vertical units to horizontal
         <h2>Outputs</h2>
         <h3>Hillshade Top and Bottom</h3>
         <p>Two raster layers will be created. Do not change the order of them, rename to 'hillshade bottom' and 'hillshade top' if necessary to help identify each one.</p>
