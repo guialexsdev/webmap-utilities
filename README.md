@@ -1,7 +1,5 @@
 # Webmap Utilities - A QGis plugin for webmap building
 
-## What it does?
-
 The Webmap Utilities plugin offers tools to facilitate the construction of webmaps, that is, dynamic maps whose content varies according to the scale.
 
 We encourage you to use our tagging system to manage your projects (we'll talk about that in the next section), but you can use some of the functionality separately if you prefer.
@@ -48,13 +46,19 @@ But what if you add another layer of cities to the project? You will certainly n
 
 Click ![](/images/settings.png) **Settings** button. The first screen is the one that manages all tags of a project. Click ![](/images/symbologyAdd.png) **Add new tag...** to insert a new tag. Give it meaningful name like **city**. And before proceed, make sure that our layer begins with the word **city**, that is how the plugin recognize that a layer belongs to a tag. Now right click the tag name and then **Add property**. Open the list of properties and select `_zoom_min`. In value field type the number 5. Every layer tagged with the word **city** will only be visbile at zoom level 5. Click OK and repeat the process to add the property `_zoom_max` with value 15. Exit Settings screen pressing OK to see the result. Now go to the labels properties of the layer and then to **Rendering** properties. Edit Data Defined Override of **Show label** option and type the following function:
 
-`controlVisibility()`
+`visibilityByZoomRange('_zoom_min', '_zoom_max')`
 
 ![](/images/normal_visibility.png)
 
 Go back to the canvas and zoom in and zoom out in order to see the results. In fact, visually we have the same effect as before, but the advantage is that now every layer tagged as **city** will only become visible in the range we defined with zoom min and zoom max properties.
 
-Now say that you want Philadelphia city to become visible at level 4. You can do it by adding to the layer an attribute called `_zoom_min` and giving the value 4 only to Philadelphia feature (and NULL to all other features). It works because feature properties are preferred over global properties.
+Now say that you want Philadelphia city to become visible at level 4. You can do it by adding **to the layer** an attribute called `_zoom_min` and giving the value 4 only to Philadelphia feature (and NULL to all other features). It works because feature properties are preferred over global properties.
+
+**IMPORTANT**: if don't want to use a property name as function paramenter, it's ok to use numbers, like below:
+
+`visibilityByZoomRange(5, 15)`
+
+Always remember that most of our functions accepts a number OR a property name.
 
 ### Controlling visibility with percentiles
 
@@ -62,13 +66,13 @@ When you have hundred of features with labels, possibly overlapping each other, 
 
 To implement that strategy, go to **Show label** option set another function:
 
-`controlVisibilityByPercentilesIncrement('population', 1, 10)`
+`visibilityByPercentilesIncrement('_zoom_min', '_zoom_max', 'population', 1, 10)`
 
 ![](/images/percentiles_increment_1.png)
 
 Here is what this function does: at first zoom level available (= 5), 1% of the highest population cities will be visible. At the next zoom level, 1% + 10% of the highest population will be visible. From zoom level 15 onwards, 100% of the cities will be visible on the map. And if you have a list of predefined percentiles, you can use a similar function called controlVisibilityByPercentilesArray:
 
-`controlVisibilityByPercentilesArray('population', array(1,20,50,100))`
+`visibilityByPercentilesArray('_zoom_min', '_zoom_max', 'population', array(1,20,50,100))`
 
 Using the function above, at first zoom level 1% of cities will be visible; next, 1 + 20%...
 
@@ -76,23 +80,23 @@ Using the function above, at first zoom level 1% of cities will be visible; next
 
 It is sometimes useful to increase label size as the zoom level increases. This is because as the scale increases, the label becomes smaller and smaller relative to the area it represents. To automatically increase label size as the zoom level increases, go to the layer Properties -> Labels -> Text and add the following function to the Data Defined Override option of **Size** field:
 
-`controlByIncrement(1, 7, 15)`
+`incrementPerZoom('_zoom_min', '_zoom_max', 1, 7, 15)`
 
-The first number indicates an ammount of increment per zoom level. The second number is the minimum size, when zoom level = 5 (remeber we defined number 5 as the minimum zoom level). The third number is the maximum size. So, our labels begins at size = 7 and will growing up to size = 15, adding 1 at each level. You can use the alternative `controlByIncrementOffset(1, 7, 8)`, where the third parameter means an offset from minimum size. Finally, you can use array, as we did in last section:
+The first number indicates an ammount of increment per zoom level. The second number is the minimum size, when zoom level = 5 (remeber we defined number 5 as the minimum zoom level). The third number is the maximum size. So, our labels begins at size = 7 and will growing up to size = 15, adding 1 at each level. You can use the alternative `incrementPerZoomOffset('_zoom_min', '_zoom_max', 1, 7, 8)`, where the third parameter means an offset from minimum size. Finally, you can use array, as we did in last section:
 
-`controlByArray(array(7,8,9,10,11,12,13,14,15))`
+`arrayItemPerZoom('_zoom_min', '_zoom_max', array(7,8,9,10,11,12,13,14,15))`
 
 Another function, if you don't care about how much the value will increase, is the following:
 
-`controlByMinMax(7,15)`
+`normalizeZoomRange('_zoom_min', '_zoom_max', 7, 15)`
 
-Basically, min-max normalization will be applied to your value range (7-15) considering zoom min and zoo max previously defined. You will see labels size uniformly increasing as zoom goes up.
+Basically, normalizeZoomRange performs a min-max normalization: transforms a zoom range into the specified value range (a different scale). Use this method to achieve a smooth size transition between zoom levels.
 
-Now lets think about cities again. Obviously, there are cities more importante than others in terms of population. It will be a good idea do give a bigger font size to bigger cities. So go to the layer Properties -> Labels -> Text and add the following function to the Data Defined Override option of **Size** field:
+Now let's think about cities again. Obviously, there are cities more important than others in terms of population. It will be a good idea do give a bigger font size to bigger cities. So go to the layer Properties -> Labels -> Text and add the following function to the Data Defined Override option of **Size** field:
 
-`controlByMinMaxOffset(scaleExponential('population', 50, 0.5, 3, 8), 7)`
+`normalizeZoomRangeOffset(scaleExponential('population', 50, 0.5, 3, 8), 7)`
 
-Note that we are using MinMax normalization, so we don't care about the increase value per zoom level. Just two parameters are required: min size and max size. And note that the function `scaleExponential('population', 50, 0.5, 3, 8)` is telling us that the minimum size is variable in a exponential fashion: less populous cities begins at size = 3; most populous cities begins at size = 8. It works just like `scale_exp`, provided by QGis, but here you don't need to know the exact value of the highest and lowest populations. Another difference is the second parameter: if you have cities with population absurdly higher than other you may want to decrease this value. Finally, the second argument of `controlByMinMaxOffset` is the offset relative to minimum value: if minimum value is 3, then size will increase up to 7 + 3 = 10; if minimum value is 8, then size will increase up to 7 + 8 = 15.
+Note that we are using normalizeZoomRangeOffset (MinMax normalization), so we don't care about the increase value per zoom level. Just two parameters are required: min size and offset from min size. And note that we are using another function as minSize parameter of normalizeZoomRangeOffset: the function `scaleExponential('population', 50, 0.5, 3, 8)`. It is telling us that the minimum size is variable in a exponential fashion: less populous cities begins at size = 3, while most populous cities begins at size = 8. It works just like `scale_exp`, provided by QGis, but here you don't need to know the exact value of the highest and lowest populations. About the second parameter: if you have cities with population much higher than others you may want to decrease this value to get better visual results. Finally, the second argument of `normalizeZoomRangeOffset` is the offset relative to minimum value: if minimum value is 3, then size will increase up to 7 + 3 = 10; if minimum value is 8, then size will increase up to 7 + 8 = 15.
 
 ![](/images/scale_exp_min_max_offset2.png)
 
@@ -126,11 +130,11 @@ It is important to keep you layer tree organized and standardized across project
 
 Its possible to create your own properties and use, for example, as argument in one of our custom functions. For example, instead of:
 
-`controlByIncrement(1, 7, 15)`
+`IncrementByZoomRange(5, 15, 1, 7, 15)`
 
 You can can create property `label_size_min` and use it like this:
 
-`controlByIncrement(1, 'label_size_min', 15)`
+`IncrementByZoomRange(5, 15, 1, 'label_size_min', 15)`
 
 (And remember that you can create an attribute called `label_size_min` and give a different value to a single feature.)
 
@@ -162,7 +166,7 @@ To import settings just click ![](/images/settings.png) **Settings** -> **Import
 
 Now it's your time try it out. Download this wpc file to replicate a map similar to the map below:
 
-[image]
+![](/images/example_map.png)
 
 Just follow these steps in order to create the map:
 

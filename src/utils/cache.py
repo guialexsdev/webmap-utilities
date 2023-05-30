@@ -1,6 +1,5 @@
 from ..utils.logUtils import info
 
-
 class Cache:
     def __init__(self, context):
         self.context = context
