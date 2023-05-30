@@ -18,15 +18,15 @@ Here is a list of features we provide:
 ## Requirements and dependencies
 
 - Minimum QGis version 3.28
-- You need to install QuickOSM plugin before installing Webmap Utilities.
+- **You need to install QuickOSM plugin before installing Webmap Utilities.**
 
 ## Installing
 
-Click here to download the zip file. To install, open Qgis and go to Plugins -> Manage and Install Plugins -> Install from ZIP.
+[Click here to download Webmap Utilities Plugin (zip file)](https://www.trilhasperdidas.com.br/files/plugin/webmap_utilities_0.1.0.zip). To install, open **Qgis and go to Plugins** -> **Manage and Install Plugins** -> **Install from ZIP**.
 
 ## Quick Tutorial
 
-Before continuing, download this vector layer and this style (QML). The layer contains cities of Pensilvania state, EUA. It will be used in this tutorial.
+Before continuing, [download this zip file](https://www.trilhasperdidas.com.br/files/plugin/cities_example.zip). It contains a vector layer (and a QML file) that will be used in this tutorial.
 
 ### Preparing your project
 
@@ -164,7 +164,7 @@ To import settings just click ![](/images/settings.png) **Settings** -> **Import
 
 ### Example Project
 
-Now it's your time try it out. Download this wpc file to replicate a map similar to the map below:
+Now it's your turn to try it out. Download [this wpc file](https://www.trilhasperdidas.com.br/files/plugin/webmap_utilities_example_0.1.0.wpc) to replicate a map similar to the map below:
 
 ![](/images/example_map.png)
 
