@@ -42,6 +42,7 @@ from .src.gui.settingsDialog import SettingsDialog
 from .src.gui.eventListeners import EventListeners
 from .src.algorithms.downloadOSMByTag import DownloadOsmByTag
 from .src.algorithms.shadedReliefCreator import ShadedReliefCreator
+from .src.algorithms.createGridVisualization import CreateGridVisualization
 import processing
 
 class WebmapUtilities:
@@ -159,10 +160,17 @@ class WebmapUtilities:
         self.toolbar.addSeparator()
 
         self.addButtonToCustomToolbar(
-            'Shaded Relief Creator',
+            'Create Shaded Relief',
             ':/icons/relief_creator.png',
             True,
             self.runShadedReliefCreator
+        )
+
+        self.addButtonToCustomToolbar(
+            'Create Grid Visualization',
+            ':/icons/grid_visualization.png',
+            True,
+            self.runGridVisualizationCreator
         )
 
         self.toolbar.addSeparator()
@@ -219,6 +227,10 @@ class WebmapUtilities:
 
     def runShadedReliefCreator(self):
         alg: ShadedReliefCreator = ShadedReliefCreator()
+        processing.execAlgorithmDialog(alg)
+
+    def runGridVisualizationCreator(self):
+        alg: CreateGridVisualization = CreateGridVisualization()
         processing.execAlgorithmDialog(alg)
 
     def runSettingsDialog(self):
