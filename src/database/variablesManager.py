@@ -110,7 +110,7 @@ class VariablesManager:
       return groupedByTag
     
     def loadFromProject(settings: Settings, project: QgsProject):
-      scope = QgsExpressionContextUtils.projectScope(project)
+      scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
       allProjectVarNames = scope.variableNames()
 
       vars = {}

@@ -5,11 +5,12 @@ import json
 import tempfile
 from pathlib import Path
 from qgis.core import Qgis
-from qgis.core import QgsProject, QgsExpressionContextUtils, QgsMessageLog
+from qgis.core import QgsProject, QgsExpressionContextUtils, QgsMessageLog  , QgsMapLayer, QgsVectorLayer,QgsFeature,QgsGeometry
 from ..model.variable import Variable
 from ..database.variablesManager import VariablesManager
 from ..model.property import PROPERTY_DATA_TYPE, Property
 from ..model.settings import Settings
+from ..utils.logUtils import error
 
 class SettingsManager:
     PROJECT_SETTINGS_VAR_KEY = 'webmap_settings'
@@ -94,9 +95,9 @@ class SettingsManager:
     def renameProperty(self, oldName, newName):
         self.variablesManager.renameVariablesByProperty(oldName, newName)
         oldPropertyObj = self.settings.properties[oldName]
-        newPropertyObk = Property(newName, oldPropertyObj.description, oldPropertyObj.type, oldPropertyObj.isList)
+        newPropertyObj = Property(newName, oldPropertyObj.description, oldPropertyObj.type, oldPropertyObj.isList)
         self.settings.removeProperties([oldName])
-        self.settings.addOrUpdateProperty(newPropertyObk)
+        self.settings.addOrUpdateProperty(newPropertyObj)
 
     def removeProperties(self, properties: list[str]):
         self.settings.removeProperties(properties)
@@ -109,14 +110,12 @@ class SettingsManager:
         self.variablesManager.persistToProject(project)
 
     # Loads plugin data from project environment.
-    def loadFromProject(project: QgsProject):
-        scope = QgsExpressionContextUtils.projectScope(project)
-
+    def loadFromProject(scope: QgsExpressionContextUtils):
         if scope.hasVariable(SettingsManager.PROJECT_SETTINGS_VAR_KEY):
             propertiesFromProject = scope.variable(SettingsManager.PROJECT_SETTINGS_VAR_KEY)
             jsonObj = json.loads(propertiesFromProject)
             settings = Settings.fromDict(jsonObj)
-            variablesManager = VariablesManager.loadFromProject(settings, project)
+            variablesManager = VariablesManager.loadFromProject(settings, QgsProject.instance())
             return SettingsManager(settings, variablesManager)
         else:
             return None

@@ -43,6 +43,8 @@ from .src.gui.eventListeners import EventListeners
 from .src.algorithms.downloadOSMByTag import DownloadOsmByTag
 from .src.algorithms.shadedReliefCreator import ShadedReliefCreator
 from .src.algorithms.createGridVisualization import CreateGridVisualization
+from .src.algorithms.createClusteredVisualization import CreateClusteredVisualization
+
 import processing
 
 class WebmapUtilities:
@@ -173,10 +175,18 @@ class WebmapUtilities:
             self.runGridVisualizationCreator
         )
 
+        self.addButtonToCustomToolbar(
+            'Create Clustered Visualization',
+            ':/icons/cluster_view.png',
+            True,
+            self.runClusteredVisualizationCreator
+        )
+
         self.toolbar.addSeparator()
         self.addZoomLevelWidget()
 
         QgsProject().instance().viewSettings().mapScalesChanged.connect(self.addZoomLevelWidget)
+        self.iface.mapCanvas().scaleChanged.connect(self.setZoomLevelVariable)
 
         self.iface.projectRead.connect(self.onProjectRead)
         self.iface.layerTreeView().contextMenuAboutToShow.connect(self.contextMenuAboutToShow)
@@ -202,6 +212,12 @@ class WebmapUtilities:
         info('Project read. Toggle required actions')
         self.setRequiredActionsEnabled(self.isProjectInitialized())
 
+    def setZoomLevelVariable(self, scale):
+        predefinedScales = QgsProject.instance().viewSettings().mapScales()
+        if predefinedScales is not None and predefinedScales.__len__() > 0:
+            targetScale = min(predefinedScales, key=lambda x:abs(x-scale))
+            QgsExpressionContextUtils.setGlobalVariable('zoomLevel', targetScale)
+
     def runConfigureProject(self):
         mercatorScales = [554678932,277339466,138669733,69334866,34667433,17333716,8666858,4333429,2166714,1083357,541678,270839,135419,67709,33854,16927,8463,4231,2115]
         viewSettings = QgsProject().instance().viewSettings()
@@ -216,7 +232,8 @@ class WebmapUtilities:
             self.setRequiredActionsEnabled(True)
 
     def runOSMDownloader(self):
-        settingsManager = SettingsManager.loadFromProject(QgsProject().instance())
+        scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+        settingsManager = SettingsManager.loadFromProject(scope)
 
         if settingsManager is None:
             QMessageBox.critical(self.iface.mainWindow(), "Error", "Project not initialized. Click on the plug icon first to initialize the project.")
@@ -233,6 +250,10 @@ class WebmapUtilities:
         alg: CreateGridVisualization = CreateGridVisualization()
         processing.execAlgorithmDialog(alg)
 
+    def runClusteredVisualizationCreator(self):
+        alg: CreateClusteredVisualization = CreateClusteredVisualization()
+        processing.execAlgorithmDialog(alg)
+
     def runSettingsDialog(self):
         self.dlg = SettingsDialog(self.iface)
         self.dlg.show()
@@ -242,7 +263,8 @@ class WebmapUtilities:
             pass
 
     def runApplyStyleDialog(self):
-        settingsManager = SettingsManager.loadFromProject(QgsProject().instance())
+        scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+        settingsManager = SettingsManager.loadFromProject(scope)
 
         if settingsManager is None:
             QMessageBox.critical(self.iface.mainWindow(), "Error", "Project not initialized. Click on the plug icon first to initialize the project.")
@@ -274,7 +296,8 @@ class WebmapUtilities:
         self.iface.mapCanvas().refreshAllLayers()
 
     def runApplyStructure(self):
-        settingsManager = SettingsManager.loadFromProject(QgsProject().instance())
+        scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+        settingsManager = SettingsManager.loadFromProject(scope)
 
         if settingsManager is None:
             QMessageBox.critical(self.iface.mainWindow(), "Error", "Project not initialized. Click on the plug icon first to initialize the project.")
@@ -291,7 +314,8 @@ class WebmapUtilities:
         if ret == QMessageBox.No:
             return
         
-        settingsManager = SettingsManager.loadFromProject(QgsProject.instance())
+        scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+        settingsManager = SettingsManager.loadFromProject(scope)
         LayerTreeOrganizer(self.iface, settingsManager).applyStructure(settingsManager.settings.structure)
         self.iface.mapCanvas().refreshAllLayers()
 
@@ -311,7 +335,7 @@ class WebmapUtilities:
             targetScale = min(predefinedScales, key=lambda x:abs(x-scale))
             zoomLevelComboIndex = predefinedScales.index(targetScale)
             self.zoomLevelComboWidget.setCurrentIndex(zoomLevelComboIndex)
-            QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), 'zoomLevel', zoomLevelComboIndex)
+            QgsExpressionContextUtils.setGlobalVariable('zoomLevel', zoomLevelComboIndex)
 
     def updateScale(self, index):
         if index == None or index < 0:

@@ -9,5 +9,6 @@
         <file>./icons/osm.png</file>
         <file>./icons/relief_creator.png</file>
         <file>./icons/grid_visualization.png</file>
+        <file>./icons/cluster_view.png</file>
     </qresource>
 </RCC>

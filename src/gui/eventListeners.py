@@ -20,7 +20,8 @@ class EventListeners:
 
         if selectedLayers is not None:
             menu.addSeparator()
-            settingsManager = SettingsManager.loadFromProject(project)
+            scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+            settingsManager = SettingsManager.loadFromProject(scope)
 
             if settingsManager is not None:
                 SetPropertyContextMenuHandler(iface, settingsManager, menu.parent()).handle(menu, selectedLayers)
@@ -42,14 +43,15 @@ class EventListeners:
             minZoom = 0
             maxZoom = len(predefinedScales) - 1
 
-            settingsManager = SettingsManager.loadFromProject(project)
+            scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+            settingsManager = SettingsManager.loadFromProject(scope)
 
             if settingsManager is None:
                 return
 
             tag = Utils.getLayerTag(layer, settingsManager.settings)
-            minZoomFromVars = int(Utils.getVariable(tag, '_zoom_min', None, minZoom)[1])
-            maxZoomFromVars = int(Utils.getVariable(tag, '_zoom_max', None, maxZoom)[1])
+            minZoomFromVars = int(Utils.getVariable(tag, '_zoom_min', scope, None, minZoom)[1])
+            maxZoomFromVars = int(Utils.getVariable(tag, '_zoom_max', scope, None, maxZoom)[1])
 
             if layer.hasScaleBasedVisibility():
                 minScale = int(math.floor(layer.minimumScale()))

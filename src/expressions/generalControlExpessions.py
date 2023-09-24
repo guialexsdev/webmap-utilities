@@ -1,4 +1,5 @@
-from qgis.core import qgsfunction, NULL, QgsExpression
+from qgis.core import qgsfunction, NULL, QgsExpression, QgsExpressionContextUtils, QgsProject
+from ..utils.logUtils import info
 from ..utils.cache import Cache
 from ..utils.webmapCommons import Utils
 
@@ -36,13 +37,14 @@ def incrementPerZoom(minZoom, increment, minValue, maxValue, feature, parent, co
     numbers.
     """
     def work():
-      key = Utils.getCachedLayerTag(context)
+      scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+      key = Utils.getCachedLayerTag(context, scope)
 
       currentZoom = context.variable('zoom_level') + 1
-      _minZoom   = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
-      _minValue  = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
-      _maxValue  = float(Utils.getVariable(key, maxValue, feature)[1] if isinstance(maxValue, str) else maxValue)
-      _increment = float(Utils.getVariable(key, increment, feature)[1] if isinstance(increment, str) else increment)
+      _minZoom   = float(Utils.getVariable(key, minZoom, scope, feature)[1] if isinstance(minZoom, str) else minZoom)
+      _minValue  = float(Utils.getVariable(key, minValue, scope, feature)[1] if isinstance(minValue, str) else minValue)
+      _maxValue  = float(Utils.getVariable(key, maxValue, scope, feature)[1] if isinstance(maxValue, str) else maxValue)
+      _increment = float(Utils.getVariable(key, increment, scope, feature)[1] if isinstance(increment, str) else increment)
 
       _size = float(_minValue + (currentZoom - _minZoom) * _increment)
 
@@ -78,14 +80,15 @@ def incrementPerZoomOffset(minZoom, increment, minValue, fromMinOffset, feature,
     numbers.
     """
     def work():
-      key = Utils.getCachedLayerTag(context)
+      scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+      key = Utils.getCachedLayerTag(context, scope)
 
       currentZoom    = context.variable('zoom_level') + 1
-      _minZoom       = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
-      _minValue      = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
-      _fromMinOffset = float(Utils.getVariable(key, fromMinOffset, feature)[1] if isinstance(fromMinOffset, str) else fromMinOffset)
+      _minZoom       = float(Utils.getVariable(key, minZoom, scope, feature)[1] if isinstance(minZoom, str) else minZoom)
+      _minValue      = float(Utils.getVariable(key, minValue, scope, feature)[1] if isinstance(minValue, str) else minValue)
+      _fromMinOffset = float(Utils.getVariable(key, fromMinOffset, scope, feature)[1] if isinstance(fromMinOffset, str) else fromMinOffset)
       _maxValue      = _minValue + _fromMinOffset
-      _increment     = float(Utils.getVariable(key, increment, feature)[1] if isinstance(increment, str) else increment)
+      _increment     = float(Utils.getVariable(key, increment, scope, feature)[1] if isinstance(increment, str) else increment)
 
       _size = float(_minValue + (currentZoom - _minZoom) * _increment)
 
@@ -120,11 +123,12 @@ def arrayItemPerZoom(minZoom, array, feature, parent, context):
     arrayItemPerZoom('_zoom_min', '_my_array') -> the same as before, but using properties.
     """
     def work():
-      key = Utils.getCachedLayerTag(context)
+      scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+      key = Utils.getCachedLayerTag(context, scope)
 
       currentZoom = context.variable('zoom_level') + 1
-      _minZoom   = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
-      _array   = Utils.strToArrayOfNumbers(Utils.getVariable(key, array, feature)[1]) if isinstance(array, str) else array
+      _minZoom   = float(Utils.getVariable(key, minZoom, scope, feature)[1] if isinstance(minZoom, str) else minZoom)
+      _array   = Utils.strToArrayOfNumbers(Utils.getVariable(key, array, scope, feature)[1]) if isinstance(array, str) else array
 
       return _array[int(Utils.boundValue(currentZoom - _minZoom, 0, _array.__len__() - 1))]
 
@@ -158,13 +162,14 @@ def normalizeZoomRange(minZoom, maxZoom, minValue, maxValue, feature, parent, co
     """
     def work():
       cache = Cache(context)
-      key   = Utils.getCachedLayerTag(context)
+      scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+      key   = Utils.getCachedLayerTag(context, scope)
 
       currentZoom = context.variable('zoom_level') + 1
-      _minZoom    = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
-      _maxZoom    = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom)
-      _minValue   = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
-      _maxValue   = float(Utils.getVariable(key, maxValue, feature)[1] if isinstance(maxValue, str) else maxValue)
+      _minZoom    = float(Utils.getVariable(key, minZoom, scope, feature)[1] if isinstance(minZoom, str) else minZoom)
+      _maxZoom    = float(Utils.getVariable(key, maxZoom, scope, feature)[1] if isinstance(maxZoom, str) else maxZoom)
+      _minValue   = float(Utils.getVariable(key, minValue, scope, feature)[1] if isinstance(minValue, str) else minValue)
+      _maxValue   = float(Utils.getVariable(key, maxValue, scope, feature)[1] if isinstance(maxValue, str) else maxValue)
 
       _normalizedValueKey = f'{currentZoom}_{_minZoom}_{_maxZoom}_{_minValue}_{_maxValue}'
       _normalizedValue    = cache.cachedSection(_normalizedValueKey, lambda: Utils.normalizeMinMax(currentZoom, _minZoom, _maxZoom, _minValue, _maxValue))
@@ -200,13 +205,14 @@ def normalizeZoomRangeOffset(minZoom, maxZoom, minValue, fromMinOffset, feature,
     normalizeZoomRangeOffset('_zoom_min', '_zoom_max', '_label_min_size', '_label_offset_size') -> the same as before, but using properties.
     """
     def work():
-      key = Utils.getCachedLayerTag(context)
+      scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+      key = Utils.getCachedLayerTag(context, scope)
 
       currentZoom      = context.variable('zoom_level') + 1
-      _minZoom         = float(Utils.getVariable(key, minZoom, feature)[1] if isinstance(minZoom, str) else minZoom)
-      _maxZoom         = float(Utils.getVariable(key, maxZoom, feature)[1] if isinstance(maxZoom, str) else maxZoom)
-      _minValue        = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
-      _fromMinOffset   = float(Utils.getVariable(key, fromMinOffset, feature)[1] if isinstance(fromMinOffset, str) else fromMinOffset)
+      _minZoom         = float(Utils.getVariable(key, minZoom, scope, feature)[1] if isinstance(minZoom, str) else minZoom)
+      _maxZoom         = float(Utils.getVariable(key, maxZoom, scope, feature)[1] if isinstance(maxZoom, str) else maxZoom)
+      _minValue        = float(Utils.getVariable(key, minValue, scope, feature)[1] if isinstance(minValue, str) else minValue)
+      _fromMinOffset   = float(Utils.getVariable(key, fromMinOffset, scope, feature)[1] if isinstance(fromMinOffset, str) else fromMinOffset)
       _maxValue        = _minValue + _fromMinOffset
       _normalizedValue = Utils.normalizeMinMax(currentZoom, _minZoom, _maxZoom, _minValue, _maxValue)
 
@@ -240,9 +246,10 @@ def normalizeAttribute(attributeName, minValue, maxValue, feature, parent, conte
     parameter <b>attributeName</b> can't be replaced by a property.
     """
     def work():
-      key = Utils.getCachedLayerTag(context)
-      _minValue = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
-      _maxValue = float(Utils.getVariable(key, maxValue, feature)[1] if isinstance(maxValue, str) else maxValue)
+      scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+      key   = Utils.getCachedLayerTag(context, scope)
+      _minValue = float(Utils.getVariable(key, minValue, scope, feature)[1] if isinstance(minValue, str) else minValue)
+      _maxValue = float(Utils.getVariable(key, maxValue, scope, feature)[1] if isinstance(maxValue, str) else maxValue)
 
       layer = Utils.getCurrentLayer(context)
       minAttr = context.cachedValue('_layer_min')
@@ -288,10 +295,11 @@ def scaleExponential(attributeName, outlierEffect, exponent, minValue, maxValue,
     scaleExponential('population', 50, 0.5, 3, 8)
     """
     def work():
-      key = Utils.getCachedLayerTag(context)
+      scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+      key = Utils.getCachedLayerTag(context, scope)
 
-      _minValue = float(Utils.getVariable(key, minValue, feature)[1] if isinstance(minValue, str) else minValue)
-      _maxValue = float(Utils.getVariable(key, maxValue, feature)[1] if isinstance(maxValue, str) else maxValue)
+      _minValue = float(Utils.getVariable(key, minValue, scope, feature)[1] if isinstance(minValue, str) else minValue)
+      _maxValue = float(Utils.getVariable(key, maxValue, scope, feature)[1] if isinstance(maxValue, str) else maxValue)
 
       layer = Utils.getCurrentLayer(context)
       minAttr = context.cachedValue('_layer_min')

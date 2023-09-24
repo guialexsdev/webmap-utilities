@@ -13,10 +13,13 @@ from qgis.core import QgsProcessingParameterVectorLayer
 from qgis.core import QgsProcessingParameterField
 from qgis.core import QgsProcessingParameterExtent
 from qgis.core import QgsProcessingParameterFeatureSink
-from qgis.core import QgsMapLayer, QgsField, QgsDefaultValue, edit
+from qgis.core import QgsProcessingParameterString
+from qgis.core import QgsField, edit, QgsFeatureRequest, QgsVectorLayer, QgsExpressionContext, QgsExpressionContextUtils
+
 from qgis.PyQt.QtCore import QVariant
 
 import processing
+from ..utils.logUtils import info
 
 class CreateGridVisualization(QgsProcessingAlgorithm):
     def initAlgorithm(self, config=None):        
@@ -26,6 +29,7 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterNumber('grid_square_length_meters', 'Grid Square Length (meters)', type=QgsProcessingParameterNumber.Double, minValue=100, defaultValue=None))
         self.addParameter(QgsProcessingParameterNumber('number_of_zooms', 'Number of zooms', type=QgsProcessingParameterNumber.Integer, minValue=1, defaultValue=None))
         self.addParameter(QgsProcessingParameterFeatureSink('GridView', 'Grid View', type=QgsProcessing.SourceType.TypeVectorPoint, createByDefault=True, defaultValue=None))
+        self.addParameter(QgsProcessingParameterString('new_attribute_name', 'Attribute name (that controls visibility)', multiLine=False, defaultValue='_visibility_offset'))
 
     def processAlgorithm(self, parameters, context, model_feedback):
         # Use a multi-step feedback, so that individual child algorithm progress reports are adjusted for the
@@ -38,7 +42,7 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
         outputs = {}
 
         squareSideSize = 2*parameters['grid_square_length_meters']
-        maxNearestDistance = parameters['grid_square_length_meters']
+        newAttributeName = parameters['new_attribute_name']
 
         for nZoom in range(parameters['number_of_zooms']):
             squareSideSize = squareSideSize / 2
@@ -76,16 +80,16 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
             outputs[f'JoinAttributesByNearest{nZoom}'] = processing.run('native:joinbynearest', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
             toBeMerged.append(outputs[f'JoinAttributesByNearest{nZoom}']['OUTPUT'])
 
-            joinedLayer = context.temporaryLayerStore().mapLayer(outputs[f'JoinAttributesByNearest{nZoom}']['OUTPUT'])
+            joinedLayer: QgsVectorLayer = context.temporaryLayerStore().mapLayer(outputs[f'JoinAttributesByNearest{nZoom}']['OUTPUT'])
             joinedLayer.setName(str(nZoom))
 
-            zOffsetField = QgsField('_grid_zoom_offset', QVariant.Type.Int)
+            zOffsetField = QgsField(newAttributeName, QVariant.Type.Int)
             joinedLayer.dataProvider().addAttributes([zOffsetField])
             joinedLayer.updateFields()
 
             for feature in joinedLayer.getFeatures():
                     with edit(joinedLayer):
-                        feature['_grid_zoom_offset'] = nZoom
+                        feature[newAttributeName] = nZoom
                         joinedLayer.updateFeature(feature)
 
             currStep += 1
@@ -110,7 +114,7 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
         alg_params = {
             'DISCARD_NONMATCHING': False,
             'FIELD': parameters['id_attribute'],
-            'FIELDS_TO_COPY': ['_grid_zoom_offset'],
+            'FIELDS_TO_COPY': [newAttributeName],
             'FIELD_2': parameters['id_attribute'],
             'INPUT': parameters['vector_layer'],
             'INPUT_2': outputs['MergeVectorLayers']['OUTPUT'],
@@ -130,12 +134,29 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
             'DISCARD_NONMATCHING': False,
             'INPUT': parameters['vector_layer'],
             'JOIN': outputs['JoinAttributesByFieldValue']['OUTPUT'],
-            'JOIN_FIELDS': ['_grid_zoom_offset'],
+            'JOIN_FIELDS': [newAttributeName],
             'PREDICATE': [0,1,2,3,4],  # intersect,contain,equal,touch,overlap
             'SUMMARIES': [2],  # min
             'OUTPUT': parameters['GridView']
         }
         outputs['JoinAttributesByLocationSummary'] = processing.run('qgis:joinbylocationsummary', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
+        
+        finalLayer: QgsVectorLayer = context.temporaryLayerStore().mapLayer(outputs['JoinAttributesByLocationSummary']['OUTPUT'])
+        
+        request = QgsFeatureRequest()
+        reqContext = QgsExpressionContext()
+        reqContext.appendScopes(QgsExpressionContextUtils.globalProjectLayerScopes(finalLayer))
+        request.setExpressionContext(reqContext)
+        request.setFilterExpression(f'"{newAttributeName}" IS NULL')
+        
+        with edit(finalLayer):
+            idx = finalLayer.fields().indexFromName(f'{newAttributeName}_min')
+            finalLayer.renameAttribute(idx, newAttributeName)
+
+            for feature2 in finalLayer.getFeatures(request):
+                feature2[newAttributeName] = parameters['number_of_zooms']
+                finalLayer.updateFeature(feature2)
+
         results['GridView'] = outputs['JoinAttributesByLocationSummary']['OUTPUT']
 
         return results

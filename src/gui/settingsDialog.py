@@ -2,7 +2,7 @@ import os
 import tempfile
 import traceback
 
-from qgis.core import QgsProject, QgsMessageLog
+from qgis.core import QgsProject, QgsMessageLog, QgsExpressionContextUtils
 from qgis.core import Qgis
 from qgis.PyQt import uic, QtWidgets
 from qgis.PyQt.QtWidgets import QStackedWidget, QDialogButtonBox, QListWidget, QPushButton, QFileDialog, QMessageBox
@@ -21,7 +21,8 @@ class SettingsDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.iface = iface
         self.project = QgsProject.instance()
-        self.settingsManager = SettingsManager.loadFromProject(QgsProject.instance())
+        scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+        self.settingsManager = SettingsManager.loadFromProject(scope)
 
         if self.settingsManager is None:
             self.settingsManager = SettingsManager()

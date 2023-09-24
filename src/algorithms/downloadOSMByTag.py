@@ -20,8 +20,8 @@ from ..model.variable import Variable
 class DownloadOsmByTag(QgsProcessingAlgorithm):
     def __init__(self):
         super().__init__()
-
-        settingsManager = SettingsManager.loadFromProject(QgsProject.instance())
+        scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
+        settingsManager = SettingsManager.loadFromProject(scope)
         self.variablesManager = settingsManager.variablesManager
         self.settings = settingsManager.settings
         self.tagsToDownload = []

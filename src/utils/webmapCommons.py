@@ -1,4 +1,4 @@
-from qgis.core import QgsExpressionContextUtils, QgsExpressionContext, QgsProject, QgsMapLayer, NULL, QgsMapLayer
+from qgis.core import QgsExpressionContextUtils, QgsExpressionContext, QgsProject, QgsMapLayer, NULL, QgsMapLayer, QgsExpressionContextScope
 from ..model.settings import TAG_IDENTIFY_MODE, Settings
 from ..database.settingsManager import SettingsManager
 from ..model.variable import Variable
@@ -17,11 +17,12 @@ class Utils:
         except:
             return None
               
-    def getCachedLayerTag(context: QgsExpressionContext):
+    def getCachedLayerTag(context: QgsExpressionContext, scope: QgsExpressionContextScope):
         tagFound = context.cachedValue('webmap_current_tag')
 
         if tagFound is None:
-            settingsManager = SettingsManager.loadFromProject(QgsProject.instance())
+            settingsManager = SettingsManager.loadFromProject(scope)
+            
             settings = settingsManager.settings
             tags: list[str] = None
 
@@ -58,7 +59,7 @@ class Utils:
         id = context.variable('layer_id')
         return QgsProject.instance().mapLayer(id)
         
-    def getVariable(key, prop, feature = None, default = None):
+    def getVariable(key, prop, scope: QgsExpressionContextScope, feature = None, default = None):
         value = None
         varName = Variable.formatVariableName(key,prop)
 
@@ -68,7 +69,12 @@ class Utils:
         if value != NULL and value is not None:
             return ('attribute', str(value))
         else:
-            value = QgsExpressionContextUtils.projectScope(QgsProject.instance()).variable(varName)
+            project = QgsProject.instance()
+
+            if project != NULL and project is not None:
+                value = scope.variable(varName)
+            else:
+                value = None
 
             if value != NULL and value is not None:
                 return ('var', value)
