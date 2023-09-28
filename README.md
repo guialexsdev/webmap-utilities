@@ -1,19 +1,14 @@
 # Webmap Utilities - A QGis plugin for webmap building
 
-The Webmap Utilities plugin offers tools to facilitate the construction of webmaps, that is, dynamic maps whose content varies according to the scale.
+This plugin offers tools to help you create webmaps.
 
-We encourage you to use our tagging system to manage your projects (we'll talk about that in the next section), but you can use some of the functionality separately if you prefer.
+Here is a list of features:
 
-Here is a list of features we provide:
-
-* Set of tools to work with zoom levels instead of scales.
-* You can set the visibility (zoom level) of one or more layers or even a group of layers.
-* The plugin offers visibility control functions to be used in the Data Defined Override option of the layers. For example: you might want each additional zoom level to show 10% more of the most populous cities on the map.
-* We also offer functions to control numeric fields (label size, symbol size, transparency etc). For example: you might want the size of the labels to increase, at each zoom level, uniformly between 7pt to 12pt.
-* With the tagging system we offer, it is easier to create templates and reproduce the idea of ​​previous maps. With a few clicks you can:
-  - Re-organize your layers according to a previously defined arrangement.
-  - Apply styles (QML files) to all tagged layers (raster or vector).
-  - Download OSM data of all tagged vector layers.
+- Avoid showing all features at once using a hierarchical, clustered or grid-based visualization engine.
+- Apply the Aerial Perspective effect to control the contrast of your hillshade.
+- Create a special Relief Shading that gives more detail to the terrain while softening the visual aspect.
+- Set the visibility of your layers or group of layers using zoom levels instead of scales.
+- Change scale using a zoom level selector.
 
 ## Requirements and dependencies
 
@@ -29,18 +24,35 @@ You can get access to the plugin's tools by just right-clicking anywhere in icon
 
 Suppose you have a vector layer containing cities in South America. It would not be interesting to show all cities at all zoom levels (scales), as it would leave the map confused and with many labels and icons overlapping. 
 
-The **Clustered Visualization** algorithm solves this problem by grouping nearby cities (and thus creating clusters) and making visible only the most populous city in each group. This grouping of cities is done by distance: you can define, for example, that the groups are formed by cities whose distances to each other are 20km maximum.
+The **Clustered Visualization** algorithm solves this problem by grouping nearby cities (and thus creating clusters) and making visible only the most populous city in each group, using an attribute called **population** for example. This cities clusterization is done by distance: you can define, for example, that the groups are formed by cities whose distances to each other are 20km maximum. 
 
-With each new zoom level, the algorithm halves this distance and forms entirely new clusters. Cities that have already been shown previously remain visible, but a new city from each new cluster will become visible as well! This process is repeated for as many levels as the user wants.
+At each new zoom level, the algorithm halves this distance and forms entirely new clusters. Cities that have already been shown previously remain visible, but a new city from each new cluster will become visible as well! This process is repeated for as many levels as the user wants.
 
-### Generating a Shaded Relief
+To run this algorithm, click ![](/images/cluster_view.png) and follow the guidelines described there. The result is a vector layer containing the same attributes as the original layer, but adding a new attribute whose default name is **_visibility_offset**. This attribute needs to be used together with the **visibilityByOffset** function (provided by the plugin) in the Data Defined Override option of the layer symbology.
 
-**Using the tagging system is not required here**
+For example, if we want to control the visibility of labels we would go to Layer Properties -> Simbology -> Rendering -> Show Label -> Edit and use the function **visibilityByOffset**. The first argument of the function indicates from which zoom level the layer as a whole will be visible, while the second argument is the attribute created by the algorithm. See the image below:
 
-Our shaded relief tool creates two layers, in the order they need to be: one above the other. It works like this because each layer uses a light source with a different azimuth and different blend modes. This brings more details to the final shaded relief.
+![](/images/using_visibility_offset.png)
 
-In addition, both layers receive the Aerial Perspective effect: the higher the layer, the greater the contrast. This is good for cartography because usually the lower portions of a region contains more cities, highways etc and less contrast means easier to recognize all these elements. Here is a good article about Aerial Perspective: http://www.reliefshading.com/design/aerial-perspective/.
+### ![](/images/grid_visualization.png) Controlling visibility of features using grids
 
-Click on ![](/images/relief_creator.png) button to generate a Shaded Relief. The option **Aerial Perspective Intensity**, always between 0 and 100, increase/decrease the contrast between higher and lower altitudes. And the option **Angle Between Light Sources** controls the angle between the light sources: a number between 30 - 70 is generally a good choice; values close to 180 usually gives an undesirable plastic effect.
+Another way to organize the visibility of a layer’s Features is through a grid view. It works like this: the algorithm creates an imaginary grid of regularly spaced points and makes visible only the Feature closest to each point. With each new zoom, the distance between grid points is halved and a new Feature is made visible.
 
-Remember that layers are generated in the order they need to be, so its a good idea to rename them to something like "hillshade top" and "hillshade bottom". After these steps, put you colored DEM file below 'hillshade bottom' layer.
+To run this algorithm, click ![](/images/grid_visualization.png) and follow the instructions described there. The remaining procedures are the same as described in the previous section.
+
+### ![](/images/aerial_perspective.png) Applying Aerial Perspective to a Hillshade
+
+This algorithm applies the Aerial Perspective effect to a hillshade. This effect consists in reducing the constraint of shading in lower regions and increasing it in higher regions. The result is more controlled and less overloaded contrast shading.
+
+To use this algorithm, click ![](/images/aerial_perspective.png) and follow the instructions described there.
+
+### ![](/images/relief_creator.png) Creating a Shaded Relief with two light sources
+
+This algorithm combines two hillshades, created with two different light sources and with different brightness and contrast settings, to generate a Shaded Relief visually light and with good level of detail. The Aerial Perspective effect is automatically applied. 
+
+To use this algorithm, click ![](/images/relief_creator.png) and follow the instructions described there.
+
+### Other functionalities
+
+- Zoom level selector to complement the QGis scale selector.
+- Right-click on a layer and then **Set Layer Zoom Level Visibility** to configure layer visibility using zoom levels instead of scales.

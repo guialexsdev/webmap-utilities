@@ -109,6 +109,13 @@ class WebmapUtilities:
         self.toolbar.addSeparator()
 
         self.addButtonToCustomToolbar(
+            'Aerial Perspective',
+            ':/icons/aerial_perspective.png',
+            True,
+            self.runShadedReliefCreator
+        )
+
+        self.addButtonToCustomToolbar(
             'Create Shaded Relief',
             ':/icons/relief_creator.png',
             True,

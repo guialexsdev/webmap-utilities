@@ -1,12 +1,7 @@
 <RCC>
     <qresource>
         <file>./icons/configure_project.png</file>
-        <file>./icons/settings.png</file>
-        <file>./icons/apply_style.png</file>
-        <file>./icons/apply_structure.png</file>
-        <file>./icons/save_structure.png</file>
-        <file>./icons/symbologyRemove.png</file>
-        <file>./icons/osm.png</file>
+        <file>./icons/aerial_perspective.png</file>
         <file>./icons/relief_creator.png</file>
         <file>./icons/grid_visualization.png</file>
         <file>./icons/cluster_view.png</file>
