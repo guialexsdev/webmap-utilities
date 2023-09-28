@@ -7,7 +7,7 @@ from qgis.core import QgsProject, QgsExpressionContextUtils, QgsApplication
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QToolBar, QComboBox, QLabel
+from qgis.PyQt.QtWidgets import QAction, QToolBar, QComboBox, QLabel, QMessageBox
 
 from .resources import *
 from .src.utils.logUtils import info
@@ -166,6 +166,8 @@ class WebmapUtilities:
         viewSettings = QgsProject().instance().viewSettings()
         viewSettings.setMapScales(mercatorScales)
         viewSettings.setUseProjectScales(True)
+        QMessageBox.information(self.iface.mainWindow(), "Configuration", "The list of predefined scales has been changed. To manually change or remove the list just go to Project -> Properties -> View Settings.")
+
 
     def runShadedReliefCreator(self):
         alg: ShadedReliefCreator = ShadedReliefCreator()
