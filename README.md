@@ -23,9 +23,9 @@ Here is a list of features we provide:
 
 ### Preparing your project
 
-You can get access to the plugin's tools by just right-clicking anywhere in icons toolbar and choosing **Webmap Plugin Toolbar**. Then click ![](/images/configure_project.png) to configure your project with the scales normally used for webmaps. You can change this later by going to Project -> Properties -> View Settings -> Project Predefined Scales and putting there the scales you want. Remember that whatever scales are set, the zoom level count always starts from 0. That is, level 0 is always the first scale defined in the list.
+You can get access to the plugin's tools by just right-clicking anywhere in icons toolbar and choosing **Webmap Plugin Toolbar**. Then click ![](/images/configure_project.png) icon to configure your project with the scales normally used for webmaps. You can change this later by going to Project -> Properties -> View Settings -> Project Predefined Scales and putting there the scales you want. Remember that whatever scales are set, the zoom level count always starts from 0. That is, level 0 is always the first scale defined in the list.
 
-### ![](/images/apply_style.png) Controlling visibility of features using clusters
+### ![](/images/cluster_view.png) Controlling visibility of features using clusters
 
 Suppose you have a vector layer containing cities in South America. It would not be interesting to show all cities at all zoom levels (scales), as it would leave the map confused and with many labels and icons overlapping. 
 
