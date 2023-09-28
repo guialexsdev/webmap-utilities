@@ -7,21 +7,16 @@ from qgis.core import QgsProject, QgsExpressionContextUtils, QgsApplication
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QMessageBox, QToolBar, QComboBox, QLabel
+from qgis.PyQt.QtWidgets import QAction, QToolBar, QComboBox, QLabel
 
 from .resources import *
 from .src.utils.logUtils import info
-from .src.expressions.generalControlExpessions import *
 from .src.expressions.visibilityControlExpressions import *
-from .src.utils.layerTreeOrganizer import LayerTreeOrganizer
-from .src.model.variable import Variable
-from .src.database.settingsManager import SettingsManager
-from .src.gui.settingsDialog import SettingsDialog
 from .src.gui.eventListeners import EventListeners
-from .src.algorithms.downloadOSMByTag import DownloadOsmByTag
 from .src.algorithms.shadedReliefCreator import ShadedReliefCreator
 from .src.algorithms.createGridVisualization import CreateGridVisualization
 from .src.algorithms.createClusteredVisualization import CreateClusteredVisualization
+from .src.utils.webmapCommons import Utils
 from .src.algorithms.provider import Provider
 
 import processing
@@ -101,48 +96,15 @@ class WebmapUtilities:
             info('Toolbar not found. Creating Webmap Utilities Toolbar')
             self.createToolbar("Webmap Utilities Toolbar")
 
-        isProjectInitialized = self.isProjectInitialized()
         info('Current project not initialized')
 
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         self.addButtonToCustomToolbar(
-            'Initialize Project',
+            'Configure this project with the appropriate scales to work with webmaps',
             ':/icons/configure_project.png',
             True,
             self.runConfigureProject
         )
-
-        tagRequiredAction = self.addButtonToCustomToolbar(
-            'Settings',
-            ':/icons/settings.png',
-            isProjectInitialized,
-            self.runSettingsDialog
-        )
-        self.tagRequiredActions.append(tagRequiredAction)
-
-        tagRequiredAction = self.addButtonToCustomToolbar(
-            'Apply Style',
-            ':/icons/apply_style.png',
-            isProjectInitialized,
-            self.runApplyStyleDialog
-        )
-        self.tagRequiredActions.append(tagRequiredAction)
-
-        tagRequiredAction = self.addButtonToCustomToolbar(
-            'Apply Structure',
-            ':/icons/apply_structure.png',
-            isProjectInitialized,
-            self.runApplyStructure
-        )
-        self.tagRequiredActions.append(tagRequiredAction)
-
-        tagRequiredAction = self.addButtonToCustomToolbar(
-            'OSM Downloader',
-            ':/icons/osm.png',
-            isProjectInitialized,
-            self.runOSMDownloader
-        )
-        self.tagRequiredActions.append(tagRequiredAction)
 
         self.toolbar.addSeparator()
 
@@ -172,8 +134,6 @@ class WebmapUtilities:
 
         QgsProject().instance().viewSettings().mapScalesChanged.connect(self.addZoomLevelWidget)
         self.iface.mapCanvas().scaleChanged.connect(self.setZoomLevelVariable)
-
-        self.iface.projectRead.connect(self.onProjectRead)
         self.iface.layerTreeView().contextMenuAboutToShow.connect(self.contextMenuAboutToShow)
         self.iface.currentLayerChanged.connect(self.currentLayerChanged)
 
@@ -187,18 +147,7 @@ class WebmapUtilities:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removeToolBarIcon(action)
-
-    def isProjectInitialized(sef):
-        return QgsExpressionContextUtils.projectScope(QgsProject.instance()).hasVariable('webmap_settings')
     
-    def setRequiredActionsEnabled(self, enabled):
-        for action in self.tagRequiredActions:
-            action.setEnabled(enabled)
-
-    def onProjectRead(self):
-        info('Project read. Toggle required actions')
-        self.setRequiredActionsEnabled(self.isProjectInitialized())
-
     def setZoomLevelVariable(self, scale):
         predefinedScales = QgsProject.instance().viewSettings().mapScales()
         if predefinedScales is not None and predefinedScales.__len__() > 0:
@@ -211,24 +160,6 @@ class WebmapUtilities:
         viewSettings.setMapScales(mercatorScales)
         viewSettings.setUseProjectScales(True)
 
-        if not self.isProjectInitialized():
-            project = QgsProject().instance()
-            settingsManager = SettingsManager()
-            settingsManager.persistToProject(project)
-
-            self.setRequiredActionsEnabled(True)
-
-    def runOSMDownloader(self):
-        scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
-        settingsManager = SettingsManager.loadFromProject(scope)
-
-        if settingsManager is None:
-            QMessageBox.critical(self.iface.mainWindow(), "Error", "Project not initialized. Click on the plug icon first to initialize the project.")
-            return
-
-        alg: DownloadOsmByTag = DownloadOsmByTag()
-        processing.execAlgorithmDialog(alg)
-
     def runShadedReliefCreator(self):
         alg: ShadedReliefCreator = ShadedReliefCreator()
         processing.execAlgorithmDialog(alg)
@@ -240,71 +171,6 @@ class WebmapUtilities:
     def runClusteredVisualizationCreator(self):
         alg: CreateClusteredVisualization = CreateClusteredVisualization()
         processing.execAlgorithmDialog(alg)
-
-    def runSettingsDialog(self):
-        self.dlg = SettingsDialog(self.iface)
-        self.dlg.show()
-
-        result = self.dlg.exec_()
-        if result:
-            pass
-
-    def runApplyStyleDialog(self):
-        scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
-        settingsManager = SettingsManager.loadFromProject(scope)
-
-        if settingsManager is None:
-            QMessageBox.critical(self.iface.mainWindow(), "Error", "Project not initialized. Click on the plug icon first to initialize the project.")
-            return
-    
-        ret = QMessageBox.question(
-            None,
-            "Apply style confirmation",
-            f'Do you really want to apply style to all tagged layers?',
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
-
-        if ret == QMessageBox.No:
-            return
-
-        project = QgsProject.instance()
-        settingsManager = SettingsManager.loadFromProject(project)
-
-        tags = settingsManager.settings.tags
-
-        for k, layer in QgsProject.instance().mapLayers().items():
-            for tag in tags:
-                currentLayerTag = Utils.getLayerTag(layer, settingsManager.settings)
-                if currentLayerTag == tag:
-                    value = QgsExpressionContextUtils.projectScope(project).variable(Variable.formatVariableName(tag, '_style'))
-                    layer.loadNamedStyle(value)
-        
-        self.iface.mapCanvas().refreshAllLayers()
-
-    def runApplyStructure(self):
-        scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
-        settingsManager = SettingsManager.loadFromProject(scope)
-
-        if settingsManager is None:
-            QMessageBox.critical(self.iface.mainWindow(), "Error", "Project not initialized. Click on the plug icon first to initialize the project.")
-            return
-    
-        ret = QMessageBox.question(
-            None,
-            "Apply confirmation",
-            f'The project default layer arrangement will be applied. Some layers will be moved and some groups may be created. Confirm?',
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
-
-        if ret == QMessageBox.No:
-            return
-        
-        scope = QgsExpressionContextUtils.projectScope(QgsProject.instance())
-        settingsManager = SettingsManager.loadFromProject(scope)
-        LayerTreeOrganizer(self.iface, settingsManager).applyStructure(settingsManager.settings.structure)
-        self.iface.mapCanvas().refreshAllLayers()
 
     def contextMenuAboutToShow(self, menu):
         EventListeners.onContextMenuAboutToShow(self.iface, menu)

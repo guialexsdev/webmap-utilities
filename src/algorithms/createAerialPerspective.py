@@ -133,7 +133,7 @@ class CreateAerialPerspective(QgsProcessingAlgorithm):
             'OUTPUT': parameters['AerialPerspective']
         }
         outputs['RasterCalculator'] = processing.run('gdal:rastercalculator', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
-        results['AerialPerspective'] = outputs['RasterCalculator']['OUTPUT']
+        results['OUTPUT'] = outputs['RasterCalculator']['OUTPUT']
         return results
 
     def name(self):

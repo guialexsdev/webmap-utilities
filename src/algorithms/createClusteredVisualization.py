@@ -68,7 +68,7 @@ class CreateClusteredVisualization(QgsProcessingAlgorithm):
             }
             outputs[f'DbscanClustering{nZoom}'] = processing.run('webmap_utilities:clusterization_by_distance', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
 
-            if nZoom == parameters['NUMBER_OF_ZOOM_LEVELS'] - 1:
+            if nZoom == parameters['NUMBER_OF_ZOOM_LEVELS'] - 1 and parameters['OUTPUT'].sink.staticValue() != QgsProcessing.TEMPORARY_OUTPUT:
                 clusterLayer: QgsVectorLayer = QgsVectorLayer(outputs[f'DbscanClustering{nZoom}']['OUTPUT'])
             else:
                 clusterLayer: QgsVectorLayer = context.temporaryLayerStore().mapLayer(outputs[f'DbscanClustering{nZoom}']['OUTPUT'])
