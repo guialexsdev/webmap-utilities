@@ -164,5 +164,4 @@ class CreateAerialPerspective(QgsProcessingAlgorithm):
         <h3>Maximum constrast</h3>
         Contrast applied in the higher regions.
         <br />
-        <p align="right">Algorithm author: Guilherme Alexsander Pereira (guilhermealexs.dev@gmail.com)</p>
         """

@@ -231,5 +231,4 @@ class ShadedReliefCreator(QgsProcessingAlgorithm):
         <h3>Hillshade Top and Bottom</h3>
         <p>Two raster layers will be created. Hillshade (top) must always be above the Hillshade (bottom). Manually change the order of these layers if they were created in a different order.</p>
         <br />
-        <p align="right">Algorithm author: Guilherme Alexsander Pereira (guilhermealexs.dev@gmail.com)</p>
         """
