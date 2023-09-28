@@ -1,3 +1,4 @@
+import processing
 from qgis.core import QgsProcessing, QgsBrightnessContrastFilter, QgsBilinearRasterResampler, QgsProcessingContext, QgsRasterLayer, QgsMapLayer, QgsProject
 from qgis.core import QgsProcessingAlgorithm
 from qgis.core import QgsProcessingMultiStepFeedback
@@ -5,18 +6,18 @@ from qgis.core import QgsProcessingParameterNumber
 from qgis.core import QgsProcessingParameterRasterLayer
 from qgis.core import QgsProcessingParameterRasterDestination
 from qgis.PyQt.QtGui import QPainter
-import processing
+from .createShadedReliefPostProcessing import CreateShadedReliefPostProcessing
 
 class ShadedReliefCreator(QgsProcessingAlgorithm):
 
     def initAlgorithm(self, config=None):
-        self.addParameter(QgsProcessingParameterRasterLayer('dem', 'dem', defaultValue=None))
-        self.addParameter(QgsProcessingParameterNumber('ap_intensity', 'Aerial Perspective Intensity', type=QgsProcessingParameterNumber.Integer, minValue=-255, maxValue=255, defaultValue=60))
-        self.addParameter(QgsProcessingParameterNumber('angle_between_light_sources', 'Angle Between Light Sources', type=QgsProcessingParameterNumber.Double, minValue=10, maxValue=180, defaultValue=45))
-        self.addParameter(QgsProcessingParameterNumber('z_factor', 'Z Factor', type=QgsProcessingParameterNumber.Double, defaultValue=1))
-        self.addParameter(QgsProcessingParameterNumber('scale', 'Scale', type=QgsProcessingParameterNumber.Double, defaultValue=1))
-        self.addParameter(QgsProcessingParameterRasterDestination('HillshadeLayerBottom', 'Bottom Hillshade', createByDefault=True, defaultValue=None))
-        self.addParameter(QgsProcessingParameterRasterDestination('HillshadeLayerTop', 'Top Hillshade', createByDefault=True, defaultValue=None))
+        self.addParameter(QgsProcessingParameterRasterLayer('DEM', 'DEM', defaultValue=None))
+        self.addParameter(QgsProcessingParameterNumber('AP_INTENSITY', 'Aerial Perspective Intensity', type=QgsProcessingParameterNumber.Integer, minValue=-255, maxValue=255, defaultValue=60))
+        self.addParameter(QgsProcessingParameterNumber('ANGLE_BETWEEN_LIGHT_SOURCES', 'Angle Between Light Sources', type=QgsProcessingParameterNumber.Double, minValue=10, maxValue=180, defaultValue=45))
+        self.addParameter(QgsProcessingParameterNumber('Z_FACTOR', 'Z Factor', type=QgsProcessingParameterNumber.Double, defaultValue=1))
+        self.addParameter(QgsProcessingParameterNumber('SCALE', 'SCALE', type=QgsProcessingParameterNumber.Double, defaultValue=1))
+        self.addParameter(QgsProcessingParameterRasterDestination('HILLSHADE_LAYER_BOTTOM', 'Bottom Hillshade', createByDefault=True, defaultValue=None))
+        self.addParameter(QgsProcessingParameterRasterDestination('HILLSHADE_LAYER_TOP', 'Top Hillshade', createByDefault=True, defaultValue=None))
 
     def processAlgorithm(self, parameters, context: QgsProcessingContext, model_feedback):
         # Use a multi-step feedback, so that individual child algorithm progress reports are adjusted for the
@@ -29,7 +30,7 @@ class ShadedReliefCreator(QgsProcessingAlgorithm):
         # DEM Stats
         alg_params = {
             'BAND': 1,
-            'INPUT': parameters['dem']
+            'INPUT': parameters['DEM']
         }
         outputs['DemStats'] = processing.run('native:rasterlayerstatistics', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
 
@@ -40,9 +41,9 @@ class ShadedReliefCreator(QgsProcessingAlgorithm):
         
         for idx in range(2):
             if idx == 0:
-                azimuth = 360 - float(parameters['angle_between_light_sources'])/2
+                azimuth = 360 - float(parameters['ANGLE_BETWEEN_LIGHT_SOURCES'])/2
             else:
-                azimuth = float(parameters['angle_between_light_sources'])/2
+                azimuth = float(parameters['ANGLE_BETWEEN_LIGHT_SOURCES'])/2
 
             # Hillshade
             alg_params = {
@@ -52,12 +53,12 @@ class ShadedReliefCreator(QgsProcessingAlgorithm):
                 'COMBINED': False,
                 'COMPUTE_EDGES': False,
                 'EXTRA': '',
-                'INPUT': parameters['dem'],
+                'INPUT': parameters['DEM'],
                 'MULTIDIRECTIONAL': False,
                 'OPTIONS': '',
-                'SCALE': parameters['scale'],
+                'SCALE': parameters['SCALE'],
                 'ZEVENBERGEN': False,
-                'Z_FACTOR': parameters['z_factor'],
+                'Z_FACTOR': parameters['Z_FACTOR'],
                 'OUTPUT': QgsProcessing.TEMPORARY_OUTPUT
             }
             outputs[f'Hillshade{idx}'] = processing.run('gdal:hillshade', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
@@ -100,8 +101,8 @@ class ShadedReliefCreator(QgsProcessingAlgorithm):
             demMin = outputs['DemStats']['MIN']
             demMax = outputs['DemStats']['MAX']
             
-            contrastMin = -parameters['ap_intensity']
-            contrastMax = parameters['ap_intensity']
+            contrastMin = -parameters['AP_INTENSITY']
+            contrastMax = parameters['AP_INTENSITY']
             contrast = f'({contrastMax} - {contrastMin})*((A - {demMin}) / ({demMax} - {demMin})) + {contrastMin}'
             contrastFactor = f'(259*(({contrast}) + 255)) / (255*(259 - ({contrast})))'
             
@@ -118,7 +119,7 @@ class ShadedReliefCreator(QgsProcessingAlgorithm):
                 'BAND_F': None,
                 'EXTRA': '',
                 'FORMULA': apDenorm,
-                'INPUT_A': parameters['dem'],
+                'INPUT_A': parameters['DEM'],
                 'INPUT_B': outputs[f'HillshadeFloat{idx}']['OUTPUT'],
                 'INPUT_C': None,
                 'INPUT_D': None,
@@ -152,8 +153,7 @@ class ShadedReliefCreator(QgsProcessingAlgorithm):
             apDenormMax = outputs[f'ApDenormStats{idx}']['MAX']
             apNorm = f'255*((A - {apDenormMin}) / ({apDenormMax} - {apDenormMin}))'
 
-
-            rasterName = f"HillshadeLayer{'Top' if idx == 1 else 'Bottom'}"
+            rasterName = f"HILLSHADE_LAYER_{'TOP' if idx == 1 else 'BOTTOM'}"
 
             # Raster calculator
             alg_params = {
@@ -178,63 +178,58 @@ class ShadedReliefCreator(QgsProcessingAlgorithm):
             }
 
             outputs[f'RasterCalculator{idx}'] = processing.run('gdal:rastercalculator', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
-            
-            layer: QgsMapLayer = QgsRasterLayer(outputs[f'RasterCalculator{idx}']['OUTPUT'])
-            layer.setOpacity(0.5)
-            resampleFilter = layer.resampleFilter()
-            resampleFilter.setZoomedInResampler(QgsBilinearRasterResampler())
-            resampleFilter.setZoomedOutResampler(QgsBilinearRasterResampler())
-            layer.setName(rasterName)
-
-            if idx == 0:
-                contrastFilter = QgsBrightnessContrastFilter()
-                contrastFilter.setContrast(-25)
-                contrastFilter.setBrightness(40)
-                layer.pipe().set(contrastFilter)
-                layer.setBlendMode(QPainter.CompositionMode.CompositionMode_Multiply)
-            else:
-                contrastFilter = QgsBrightnessContrastFilter()
-                contrastFilter.setContrast(-25)
-                contrastFilter.setBrightness(-40)
-                layer.pipe().set(contrastFilter)
-                layer.setBlendMode(QPainter.CompositionMode.CompositionMode_Overlay)
-
-            QgsProject.instance().addMapLayer(layer)
-
             results[rasterName] = outputs[f'RasterCalculator{idx}']['OUTPUT']
+
+        bottomContrastFilter = QgsBrightnessContrastFilter()
+        bottomContrastFilter.setContrast(-25)
+        bottomContrastFilter.setBrightness(40)
+        bottomBlendMode = QPainter.CompositionMode.CompositionMode_Multiply
+
+        global renamer
+        renamer = CreateShadedReliefPostProcessing('Hillshade (Bottom)', bottomBlendMode, bottomContrastFilter)
+        context.layerToLoadOnCompletionDetails(results['HILLSHADE_LAYER_BOTTOM']).setPostProcessor(renamer)
+
+        topContrastFilter = QgsBrightnessContrastFilter()
+        topContrastFilter.setContrast(-25)
+        topContrastFilter.setBrightness(-40)
+        topBlendMode = QPainter.CompositionMode.CompositionMode_Overlay
+
+        global renamer2
+        renamer2 = CreateShadedReliefPostProcessing('Hillshade (Top)', topBlendMode, topContrastFilter)
+        context.layerToLoadOnCompletionDetails(results['HILLSHADE_LAYER_TOP']).setPostProcessor(renamer2)
 
         return results
     
     def name(self):
-        return 'Aerial Perspective'
+        return 'shaded_relief'
 
     def displayName(self):
-        return 'Aerial Perspective'
-
+        return 'Create Shaded Relief w/ Aerial Perspective'
+    
     def group(self):
-        return 'Webmap Utilities'
+        return 'Raster'
 
     def groupId(self):
-        return 'Webmap Utilities'
+        return 'Raster'
 
     def createInstance(self):
         return ShadedReliefCreator()
 
     def shortHelpString(self):
         return """
-Generates 2 shaded reliefs using two light sources and Aerial Perspective (higher areas receives more contrast than lower areas).
+        Create 2 shaded reliefs using two light sources and Aerial Perspective (higher areas receives more contrast than lower areas).
         <h2>Input parameters</h2>
         <h3>Aerial Perspective Intensity</h3>
-Increase/decrease the contrast between higher and lower altitudes
+        Increase/decrease the contrast between higher and lower altitudes. Small values decrease the effect of Aerial Perspective.
         <h3>Angle Between Light Sources</h3>
-Angle between the two light sources. Valid values: 0 - 180. Avoid extreme values, you should stay between 30 - 70 for better results.
+        Angle between the two light sources. Valid values: 0 - 180. Avoid extreme values, you should stay between 30 - 70 for better results.
         <h3>Z factor</h3>
-Vertical exaggeration. This parameter is useful when the Z units differ from the X and Y units, for example feet and meters. You can use this parameter to adjust for this. Increasing the value of this parameter will exaggerate the final result (making it look more “hilly”). The default is 1 (no exaggeration).
+        Vertical exaggeration. This parameter is useful when the Z units differ from the X and Y units, for example feet and meters. You can use this parameter to adjust for this. Increasing the value of this parameter will exaggerate the final result (making it look more “hilly”). The default is 1 (no exaggeration).
         <h3>Scale</h3>
-Ratio of vertical units to horizontal
+        Ratio of vertical units to horizontal
         <h2>Outputs</h2>
         <h3>Hillshade Top and Bottom</h3>
-        <p>Two raster layers will be created. Do not change the order of them, rename to 'hillshade bottom' and 'hillshade top' if necessary to help identify each one.</p>
+        <p>Two raster layers will be created. Do not change the order in which they were created and placed in the layer tree.</p>
         <br />
         <p align="right">Algorithm author: Guilherme Alexsander Pereira (guilhermealexs.dev@gmail.com)</p>
         """
