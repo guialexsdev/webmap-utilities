@@ -16,6 +16,7 @@ from .src.gui.eventListeners import EventListeners
 from .src.algorithms.shadedReliefCreator import ShadedReliefCreator
 from .src.algorithms.createGridVisualization import CreateGridVisualization
 from .src.algorithms.createClusteredVisualization import CreateClusteredVisualization
+from .src.algorithms.createAerialPerspective import CreateAerialPerspective
 from .src.utils.webmapCommons import Utils
 from .src.algorithms.provider import Provider
 
@@ -112,7 +113,7 @@ class WebmapUtilities:
             'Aerial Perspective',
             ':/icons/aerial_perspective.png',
             True,
-            self.runShadedReliefCreator
+            self.runAerialPerspective
         )
 
         self.addButtonToCustomToolbar(
@@ -168,6 +169,9 @@ class WebmapUtilities:
         viewSettings.setUseProjectScales(True)
         QMessageBox.information(self.iface.mainWindow(), "Configuration", "The list of predefined scales has been changed. To manually change or remove the list just go to Project -> Properties -> View Settings.")
 
+    def runAerialPerspective(self):
+        alg: CreateAerialPerspective = CreateAerialPerspective()
+        processing.execAlgorithmDialog(alg)
 
     def runShadedReliefCreator(self):
         alg: ShadedReliefCreator = ShadedReliefCreator()

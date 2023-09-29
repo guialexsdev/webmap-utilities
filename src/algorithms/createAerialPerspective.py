@@ -17,7 +17,7 @@ class CreateAerialPerspective(QgsProcessingAlgorithm):
 
     def initAlgorithm(self, config=None):
         self.addParameter(QgsProcessingParameterRasterLayer('DEM', 'DEM', defaultValue=None))
-        self.addParameter(QgsProcessingParameterRasterLayer('HILLSHADE', 'HILLSHADE', defaultValue=None))
+        self.addParameter(QgsProcessingParameterRasterLayer('HILLSHADE', 'Hillshade', defaultValue=None))
         self.addParameter(QgsProcessingParameterNumber('CONTRAST_MIN', 'Minimum constrast', type=QgsProcessingParameterNumber.Integer, minValue=-255, maxValue=255, defaultValue=-20))
         self.addParameter(QgsProcessingParameterNumber('CONTRAST_MAX', 'Maximum constrast', type=QgsProcessingParameterNumber.Integer, minValue=-255, maxValue=255, defaultValue=50))
         self.addParameter(QgsProcessingParameterRasterDestination('AerialPerspective', 'Aerial Perspective', createByDefault=True, defaultValue=None))
