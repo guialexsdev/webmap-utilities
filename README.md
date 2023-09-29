@@ -30,7 +30,7 @@ At each new zoom level, the algorithm halves this distance and forms entirely ne
 
 To run this algorithm, click ![](/images/cluster_view.png) and follow the guidelines described there. The result is a vector layer containing the same attributes as the original layer, but adding a new attribute whose default name is **_visibility_offset**. This attribute needs to be used together with the **visibilityByOffset** function (provided by the plugin) in the Data Defined Override option of the layer symbology.
 
-For example, if we want to control the visibility of labels we would go to Layer Properties -> Simbology -> Rendering -> Show Label -> Edit and use the function **visibilityByOffset**. The first argument of the function indicates from which zoom level the layer as a whole will be visible, while the second argument is the attribute created by the algorithm. See the image below:
+For example, if we want to control the visibility of labels we would go to Layer Properties -> Simbology -> Rendering -> Show Label -> Edit and use the function **visibilityByOffset**. The first argument of the function indicates from which zoom level the layer will be visible, while the second argument is the attribute created by the algorithm. See the image below:
 
 ![](/images/using_visibility_offset.png)
 
