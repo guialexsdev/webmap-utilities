@@ -164,4 +164,5 @@ class CreateAerialPerspective(QgsProcessingAlgorithm):
         <h3>Maximum constrast</h3>
         Contrast applied in the higher regions.
         <br />
+        Visit <a href="https://github.com/guialexsdev/webmap-utilities">https://github.com/guialexsdev/webmap-utilities</a> to learn more!
         """

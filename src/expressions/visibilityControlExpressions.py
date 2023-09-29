@@ -16,6 +16,9 @@ def visibilityByOffset(minZoom, offset, feature, parent, context):
     </br>
     <h2>Example usage:</h2>
     visibilityByOffset(5, 2) -> feature will be visible for all zoom levels greater than ou equal 7 (5 + 2).
+    
+    </br>
+    Visit <a href="https://github.com/guialexsdev/webmap-utilities">https://github.com/guialexsdev/webmap-utilities</a> to learn more!
     """
     def work():
         currentZoom = context.variable('zoom_level') + 1

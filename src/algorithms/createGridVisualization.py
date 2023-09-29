@@ -217,4 +217,5 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
             <h3>Attribute name (that controls visibility)</h3>
             Name of the attribute to be created. This new attribute should be used together with the visibilitByOffset() function.
             <br />
+            Visit <a href="https://github.com/guialexsdev/webmap-utilities">https://github.com/guialexsdev/webmap-utilities</a> to learn more!
         """
