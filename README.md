@@ -36,7 +36,7 @@ For example, if we want to control the visibility of labels we would go to Layer
 
 ### ![](/images/grid_visualization.png) Controlling visibility of features using grids
 
-Another way to organize the visibility of a layer’s Features is through a grid view. It works like this: the algorithm creates an imaginary grid of regularly spaced points and makes visible only the Feature closest to each point. With each new zoom, the distance between grid points is halved and a new Feature is made visible.
+Another way to control features visibility is by using a grid view. It works like this: the algorithm creates an imaginary grid of regularly spaced points and makes visible only the feature closest to each point. At each new zoom, the distance between grid points is halved and a new feature is made visible.
 
 To run this algorithm, click ![](/images/grid_visualization.png) and follow the instructions described there. The remaining procedures are the same as described in the previous section.
 
