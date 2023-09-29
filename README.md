@@ -4,7 +4,7 @@ This plugin offers tools to help you create webmaps.
 
 Here is a list of features:
 
-- Avoid showing all features at once using a hierarchical, clustered or grid-based visualization engine.
+- Avoid showing hundred of features at once. Use our hierarchical, clustered or grid-based visualization engine.
 - Apply the Aerial Perspective effect to control the contrast of your hillshade.
 - Create a special Relief Shading that gives more detail to the terrain while softening the visual aspect.
 - Set the visibility of your layers or group of layers using zoom levels instead of scales.
