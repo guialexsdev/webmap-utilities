@@ -1,11 +1,5 @@
-"""
-Model exported as python.
-Name : model
-Group : 
-With QGIS : 32806
-"""
-
-from qgis.core import QgsProcessing, QgsProcessingOutputLayerDefinition, QgsProperty
+import processing
+from qgis.core import QgsProcessing
 from qgis.core import QgsProcessingAlgorithm
 from qgis.core import QgsProcessingMultiStepFeedback
 from qgis.core import QgsProcessingParameterNumber
@@ -14,15 +8,15 @@ from qgis.core import QgsProcessingParameterField
 from qgis.core import QgsProcessingParameterExtent
 from qgis.core import QgsProcessingParameterFeatureSink
 from qgis.core import QgsProcessingParameterString
-from qgis.core import QgsField, edit, QgsFeatureRequest, QgsVectorLayer, QgsExpressionContext, QgsExpressionContextUtils
-
 from qgis.PyQt.QtCore import QVariant
 
-import processing
+from .layer.vectorLayerManager import VectorLayerManager
 from .afterProcessingLayerRenamer import AfterProcessingLayerRenamer
 
 class CreateGridVisualization(QgsProcessingAlgorithm):
-    def initAlgorithm(self, config=None):        
+    def initAlgorithm(self, config=None):
+        self.step = 0
+
         self.addParameter(QgsProcessingParameterVectorLayer('VECTOR_LAYER', 'Vector Layer (points)', types=[QgsProcessing.TypeVectorPoint], defaultValue=None))
         self.addParameter(QgsProcessingParameterField('ID_ATTRIBUTE', 'ID attribute', type=QgsProcessingParameterField.Any, parentLayerParameterName='VECTOR_LAYER', allowMultiple=False, defaultValue=None))
         self.addParameter(QgsProcessingParameterExtent('EXTENT', 'Extent', defaultValue=None))
@@ -35,19 +29,19 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
         # Use a multi-step feedback, so that individual child algorithm progress reports are adjusted for the
         # overall progress through the model
         nSteps = parameters['NUMBER_OF_ZOOMS'] * 2 + 1
-        currStep = 0
+
         feedback = QgsProcessingMultiStepFeedback(nSteps, model_feedback)
+
+        squareSideSize = 2*parameters['GRID_SQUARE_LENGTH_METERS']
+        visibilityAttribute = parameters['NEW_ATTRIBUTE_NAME']
+
         toBeMerged = []
         results = {}
         outputs = {}
 
-        squareSideSize = 2*parameters['GRID_SQUARE_LENGTH_METERS']
-        newAttributeName = parameters['NEW_ATTRIBUTE_NAME']
-
         for nZoom in range(parameters['NUMBER_OF_ZOOMS']):
             squareSideSize = squareSideSize / 2
             
-            feedback.pushInfo('Create grid')
             # Create grid
             alg_params = {
                 'CRS': 'ProjectCrs',
@@ -60,13 +54,9 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
                 'OUTPUT': QgsProcessing.TEMPORARY_OUTPUT
             }
             outputs[f'CreateGrid{nZoom}'] = processing.run('native:creategrid', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
+            
+            self.updateProgress(feedback)
 
-            currStep += 1
-            feedback.setCurrentStep(currStep)
-            if feedback.isCanceled():
-                return {}
-
-            feedback.pushInfo('Join attributes by nearest')
             # Join attributes by nearest
             alg_params = {
                 'DISCARD_NONMATCHING': False,
@@ -82,24 +72,13 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
             outputs[f'JoinAttributesByNearest{nZoom}'] = processing.run('native:joinbynearest', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
             toBeMerged.append(outputs[f'JoinAttributesByNearest{nZoom}']['OUTPUT'])
 
-            joinedLayer: QgsVectorLayer = context.temporaryLayerStore().mapLayer(outputs[f'JoinAttributesByNearest{nZoom}']['OUTPUT'])
+            joinedLayer = VectorLayerManager(outputs[f'JoinAttributesByNearest{nZoom}']['OUTPUT'], feedback, context)
             joinedLayer.setName(str(nZoom))
+            joinedLayer.createField(visibilityAttribute, QVariant.Type.Int)
+            joinedLayer.setValueOfAllAttributes(visibilityAttribute, nZoom)
 
-            zOffsetField = QgsField(newAttributeName, QVariant.Type.Int)
-            joinedLayer.dataProvider().addAttributes([zOffsetField])
-            joinedLayer.updateFields()
+        self.updateProgress(feedback)
 
-            for feature in joinedLayer.getFeatures():
-                with edit(joinedLayer):
-                    feature[newAttributeName] = nZoom
-                    joinedLayer.updateFeature(feature)
-
-            currStep += 1
-            feedback.setCurrentStep(currStep)
-            if feedback.isCanceled():
-                return {}
-
-        feedback.pushInfo('Merge vector layers')
         # Merge vector layers
         alg_params = {
             'CRS': parameters['VECTOR_LAYER'],
@@ -108,17 +87,13 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
         }
         outputs['MergeVectorLayers'] = processing.run('native:mergevectorlayers', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
     
-        currStep += 1
-        feedback.setCurrentStep(currStep)
-        if feedback.isCanceled():
-            return {}
+        self.updateProgress(feedback)
         
-        feedback.pushInfo('Join attributes by field value')
         # Join attributes by field value
         alg_params = {
             'DISCARD_NONMATCHING': False,
             'FIELD': parameters['ID_ATTRIBUTE'],
-            'FIELDS_TO_COPY': [newAttributeName],
+            'FIELDS_TO_COPY': [visibilityAttribute],
             'FIELD_2': parameters['ID_ATTRIBUTE'],
             'INPUT': parameters['VECTOR_LAYER'],
             'INPUT_2': outputs['MergeVectorLayers']['OUTPUT'],
@@ -129,10 +104,7 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
         }
         outputs['JoinAttributesByFieldValue'] = processing.run('native:joinattributestable', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
 
-        currStep += 1
-        feedback.setCurrentStep(currStep)
-        if feedback.isCanceled():
-            return {}
+        self.updateProgress(feedback)
 
         # Create spatial index
         alg_params = {
@@ -140,42 +112,29 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
         }
         outputs['CreateSpatialIndexJoinSummary'] = processing.run('native:createspatialindex', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
 
-        currStep += 1
-        feedback.setCurrentStep(currStep)
-        if feedback.isCanceled():
-            return {}
+        self.updateProgress(feedback)
 
-        feedback.pushInfo('Join by location (summary)')
         # Join by location (summary)
         alg_params = {
             'DISCARD_NONMATCHING': False,
             'INPUT': parameters['VECTOR_LAYER'],
             'JOIN': outputs['CreateSpatialIndexJoinSummary']['OUTPUT'],
-            'JOIN_FIELDS': [newAttributeName],
+            'JOIN_FIELDS': [visibilityAttribute],
             'PREDICATE': [0,1,2,3,4],  # intersect,contain,equal,touch,overlap
             'SUMMARIES': [2],  # min
             'OUTPUT': parameters['OUTPUT']
         }
         outputs['JoinAttributesByLocationSummary'] = processing.run('qgis:joinbylocationsummary', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
     
-        if parameters['OUTPUT'].sink.staticValue() == QgsProcessing.TEMPORARY_OUTPUT:
-            finalLayer: QgsVectorLayer = context.temporaryLayerStore().mapLayer(outputs['JoinAttributesByLocationSummary']['OUTPUT'])
-        else:
-            finalLayer: QgsVectorLayer = QgsVectorLayer(outputs['JoinAttributesByLocationSummary']['OUTPUT'])
+        finalLayer = VectorLayerManager(
+            outputs['JoinAttributesByLocationSummary']['OUTPUT'], 
+            feedback, 
+            context, 
+            parameters['OUTPUT']
+        )
 
-        request = QgsFeatureRequest()
-        reqContext = QgsExpressionContext()
-        reqContext.appendScopes(QgsExpressionContextUtils.globalProjectLayerScopes(finalLayer))
-        request.setExpressionContext(reqContext)
-        request.setFilterExpression(f'"{newAttributeName}" IS NULL')
-        
-        with edit(finalLayer):
-            idx = finalLayer.fields().indexFromName(f'{newAttributeName}_min')
-            finalLayer.renameAttribute(idx, newAttributeName)
-
-            for feature2 in finalLayer.getFeatures(request):
-                feature2[newAttributeName] = parameters['NUMBER_OF_ZOOMS']
-                finalLayer.updateFeature(feature2)
+        finalLayer.renameField(f'{visibilityAttribute}_min', visibilityAttribute)
+        finalLayer.setValueOfNullAttributes(visibilityAttribute, parameters['NUMBER_OF_ZOOMS'])
 
         results['OUTPUT'] = outputs['JoinAttributesByLocationSummary']['OUTPUT']
 
@@ -185,6 +144,12 @@ class CreateGridVisualization(QgsProcessingAlgorithm):
 
         return results
 
+    def updateProgress(self, feedback):
+        self.step += 1
+        feedback.setCurrentStep(self.step)
+        if feedback.isCanceled():
+            return {}
+        
     def name(self):
         return 'Grid Visualization'
 

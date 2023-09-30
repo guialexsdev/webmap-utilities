@@ -1,10 +1,3 @@
-"""in'
-Model exported as python.
-Name : model
-Group : 
-With QGIS : 32207
-"""
-
 from qgis.core import QgsProcessing
 from qgis.core import QgsProcessingAlgorithm
 from qgis.core import QgsProcessingMultiStepFeedback
