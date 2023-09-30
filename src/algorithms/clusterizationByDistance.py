@@ -1,10 +1,3 @@
-"""
-Model exported as python.
-Name : clusterizer
-Group : 
-With QGIS : 32810
-"""
-
 import processing
 from qgis.core import QgsProcessing
 from qgis.core import QgsProcessingAlgorithm
@@ -151,7 +144,6 @@ class CreateClusterizationByDistance(QgsProcessingAlgorithm):
             return {}
 
         clusterSizeAttribute = parameters['SIZE_FIELD_NAME']
-        feedback.pushInfo('Renaming attribute fid_count to {}'.format(clusterSizeAttribute))
 
         # Rename field
         alg_params = {

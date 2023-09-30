@@ -1,10 +1,4 @@
-"""
-Model exported as python.
-Name : model
-Group : 
-With QGIS : 32806
-"""
-
+import processing
 from qgis.core import QgsProcessing
 from qgis.core import QgsProcessingAlgorithm
 from qgis.core import QgsProcessingMultiStepFeedback
@@ -15,14 +9,15 @@ from qgis.core import QgsProcessingParameterFeatureSink
 from qgis.core import QgsProcessingParameterEnum
 from qgis.core import QgsProcessingParameterString
 from qgis.core import QgsProcessingParameterBoolean
-from qgis.core import QgsField, edit, QgsFeatureRequest, QgsVectorLayer, QgsExpressionContext, QgsExpressionContextUtils
 from qgis.PyQt.QtCore import QVariant
 
-import processing
+from .layer.vectorLayerManager import VectorLayerManager
 from .afterProcessingLayerRenamer import AfterProcessingLayerRenamer
 
 class CreateClusteredVisualization(QgsProcessingAlgorithm):
     def initAlgorithm(self, config=None):
+        self.step = 0
+
         self.addParameter(QgsProcessingParameterVectorLayer('VECTOR_LAYER', 'Vector layer (points)', types=[QgsProcessing.TypeVectorPoint], defaultValue=None))
         self.addParameter(QgsProcessingParameterField('ELECTION_ATTRIBUTE', 'Attribute used to select cluster members', type=QgsProcessingParameterField.Any, parentLayerParameterName='VECTOR_LAYER', allowMultiple=False, defaultValue=None))
         self.addParameter(
@@ -46,14 +41,15 @@ class CreateClusteredVisualization(QgsProcessingAlgorithm):
     def processAlgorithm(self, parameters, context, model_feedback):
         # Use a multi-step feedback, so that individual child algorithm progress reports are adjusted for the
         # overall progress through the model
-        nSteps = parameters['NUMBER_OF_ZOOM_LEVELS'] * 2
-        currStep = 0
+        nSteps = parameters['NUMBER_OF_ZOOM_LEVELS'] * 4
         feedback = QgsProcessingMultiStepFeedback(nSteps, model_feedback)
+
+        currMaxClustedDistance = 2*parameters['INITIAL_MAX_CLUSTER_MEMBER_DISTANCE']
+        visibilityAttribute = parameters['NEW_ATTRIBUTE_NAME']
+        lastZoomLevel = parameters['NUMBER_OF_ZOOM_LEVELS'] - 1
+
         results = {}
         outputs = {}
-        currMaxClustedDistance = 2*parameters['INITIAL_MAX_CLUSTER_MEMBER_DISTANCE']
-        visibilityOffsetFieldAdded = False
-        visibilityAttribute = parameters['NEW_ATTRIBUTE_NAME']
 
         for nZoom in range(parameters['NUMBER_OF_ZOOM_LEVELS']):
             currMaxClustedDistance = currMaxClustedDistance / 2
@@ -64,41 +60,49 @@ class CreateClusteredVisualization(QgsProcessingAlgorithm):
                 'DISTANCE_BETWEEN_CLUSTER_MEMBERS_METERS': currMaxClustedDistance,
                 'ID_FIELD_NAME': f'_cluster_id{nZoom}',
                 'SIZE_FIELD_NAME': f'_cluster_size{nZoom}',
-                'OUTPUT': parameters['OUTPUT'] if nZoom == parameters['NUMBER_OF_ZOOM_LEVELS'] - 1 else QgsProcessing.TEMPORARY_OUTPUT
+                'OUTPUT': parameters['OUTPUT'] if nZoom == lastZoomLevel else QgsProcessing.TEMPORARY_OUTPUT
             }
-            outputs[f'DbscanClustering{nZoom}'] = processing.run('webmap_utilities:clusterization_by_distance', alg_params, context=context, feedback=feedback, is_child_algorithm=True)
+            outputs[f'DbscanClustering{nZoom}'] = processing.run(
+                'webmap_utilities:clusterization_by_distance', 
+                alg_params, 
+                context=context, 
+                feedback=feedback, 
+                is_child_algorithm=True
+            )
 
-            if nZoom == parameters['NUMBER_OF_ZOOM_LEVELS'] - 1 and parameters['OUTPUT'].sink.staticValue() != QgsProcessing.TEMPORARY_OUTPUT:
-                clusterLayer: QgsVectorLayer = QgsVectorLayer(outputs[f'DbscanClustering{nZoom}']['OUTPUT'])
-            else:
-                clusterLayer: QgsVectorLayer = context.temporaryLayerStore().mapLayer(outputs[f'DbscanClustering{nZoom}']['OUTPUT'])
+            layer = VectorLayerManager(
+                outputs[f'DbscanClustering{nZoom}']['OUTPUT'],
+                feedback,
+                context,
+                parameters['OUTPUT']
+            )
 
             #Create attribute that controls visibility
-            if not visibilityOffsetFieldAdded:
-                visibilityOffsetFieldAdded = True
-                vOffsetField = QgsField(visibilityAttribute, QVariant.Type.Int)
-                clusterLayer.dataProvider().addAttributes([vOffsetField])
-                clusterLayer.updateFields()
+            layer.createField(visibilityAttribute, QVariant.Type.Int)
 
             if parameters['ISOLATED_FEATURES_ALWAYS_VISIBLE'] == True:
-                self.showIsolatedFeatures(nZoom, clusterLayer, parameters)
+                query = f'"_cluster_size{nZoom}" < 2 and "{visibilityAttribute}" IS NULL'
+                layer.setAttributeValueByExpression(parameters['NEW_ATTRIBUTE_NAME'], query, nZoom)
 
+            self.updateProgress(feedback)
+            
             #Show cluster members
-            self.showClusteredFeaturesByAttribute(nZoom, clusterLayer, parameters)
+            electionAttr = parameters['ELECTION_ATTRIBUTE']
+            orderBy = 'True' if parameters['ELECTION_METHOD'] == 1 else 'False'
+            query = f'array_contains(array_slice(array_sort(array_agg(to_real("{electionAttr}"), group_by:="_cluster_id{nZoom}", filter:="{visibilityAttribute}" IS NULL and "_cluster_size{nZoom}" > 1), {orderBy}),0,0), to_real("{electionAttr}"))'
+            layer.setAttributeValueByExpression(parameters['NEW_ATTRIBUTE_NAME'], query, nZoom)
 
             #Show remaining features
             if nZoom == parameters['NUMBER_OF_ZOOM_LEVELS'] - 1:
-                self.showRemainingFeatures(nZoom, clusterLayer, parameters)
+                value = nZoom if parameters['SHOW_ALL_AT_LAST_ZOOM_LEVEL'] == True else nZoom + 1
+                layer.setValueOfNullAttributes(visibilityAttribute, value)
             
-            self.deleteAttribute(clusterLayer, f'_cluster_id{nZoom}')
-            self.deleteAttribute(clusterLayer, f'_cluster_size{nZoom}')
+            layer.deleteAttribute(f'_cluster_id{nZoom}')
+            layer.deleteAttribute(f'_cluster_size{nZoom}')
 
-            currStep += 1
-            feedback.setCurrentStep(currStep)
-            if feedback.isCanceled():
-                return {}
+            self.updateProgress(feedback)
 
-        results['OUTPUT'] = outputs[f"DbscanClustering{parameters['NUMBER_OF_ZOOM_LEVELS'] - 1}"]['OUTPUT']
+        results['OUTPUT'] = outputs[f"DbscanClustering{lastZoomLevel}"]['OUTPUT']
 
         global renamer
         renamer = AfterProcessingLayerRenamer('Clustered View')
@@ -106,57 +110,11 @@ class CreateClusteredVisualization(QgsProcessingAlgorithm):
 
         return results
 
-    def showIsolatedFeatures(self, currentZoom: int, layer: QgsVectorLayer, parameters):
-        visibilityAttribute = parameters['NEW_ATTRIBUTE_NAME']
-        request = QgsFeatureRequest()
-        reqContext = QgsExpressionContext()
-        reqContext.appendScopes(QgsExpressionContextUtils.globalProjectLayerScopes(layer))
-        request.setExpressionContext(reqContext)
-        request.setFilterExpression(f'"_cluster_size{currentZoom}" < 2 and "{visibilityAttribute}" IS NULL')
-
-        with edit(layer):
-            for feature in layer.getFeatures(request):
-                feature[visibilityAttribute] = currentZoom
-                layer.updateFeature(feature)
-
-    def showClusteredFeaturesByAttribute(self, currentZoom: int, layer: QgsVectorLayer, parameters):
-        electionAttribute = parameters['ELECTION_ATTRIBUTE']
-        visibilityAttribute = parameters['NEW_ATTRIBUTE_NAME']
-        orderBy = 'True' if parameters['ELECTION_METHOD'] == 1 else 'False'
-        query = f'array_contains(array_slice(array_sort(array_agg(to_real("{electionAttribute}"), group_by:="_cluster_id{currentZoom}", filter:="{visibilityAttribute}" IS NULL and "_cluster_size{currentZoom}" > 1), {orderBy}),0,0), to_real("{electionAttribute}"))'
-
-        request = QgsFeatureRequest()
-        reqContext = QgsExpressionContext()
-        reqContext.appendScopes(QgsExpressionContextUtils.globalProjectLayerScopes(layer))
-        request.setExpressionContext(reqContext)
-        request.setFilterExpression(query)
-
-        with edit(layer):
-            for feature in layer.getFeatures(request):
-                feature[visibilityAttribute] = currentZoom
-                layer.updateFeature(feature)
-
-    def showRemainingFeatures(self, currentZoom: int, layer: QgsVectorLayer, parameters):
-        visibilityAttribute = parameters['NEW_ATTRIBUTE_NAME']
-
-        request = QgsFeatureRequest()
-        reqContext = QgsExpressionContext()
-        reqContext.appendScopes(QgsExpressionContextUtils.globalProjectLayerScopes(layer))
-        request.setExpressionContext(reqContext)
-        request.setFilterExpression(f'"{visibilityAttribute}" IS NULL')
-
-        with edit(layer):
-            for feature in layer.getFeatures(request):
-                feature[visibilityAttribute] = currentZoom if parameters['SHOW_ALL_AT_LAST_ZOOM_LEVEL'] == True else currentZoom + 1
-                layer.updateFeature(feature)
-
-    def deleteAttribute(self, layer, name):
-        with edit(layer):
-            attrIdx = layer.fields().indexFromName(name)
-            if attrIdx != -1:
-                deleted = layer.dataProvider().deleteAttributes([attrIdx])
-                layer.updateFields()
-                return deleted
+    def updateProgress(self, feedback):
+        self.step += 1
+        feedback.setCurrentStep(self.step)
+        if feedback.isCanceled():
+            return {}
 
     def name(self):
         return 'Clustered Visualization'
