@@ -43,6 +43,8 @@ Para executar esse algoritmo, clique em ![](/images/grid_visualization.png) e si
 
 Esse algoritmo aplica o efeito Perspectiva Aérea a uma camada de sombreamento. Esse efeito consiste em aumentar o constraste do sombreamento em regiões mais altas e diminuir em regiões mais baixas. O resultado é uma camada de Sombreamento mais suave, que tende a facilitar a composição dessa camada com rótulos e outros elementos do mapa.
 
+Os dois principais parâmetros, Minimum Contrast e Maximum Contrast, controlam a intensidade do constraste. Basicamente, quando mais a diferença entre esse dois valores, maior o efeito da perspectiva aérea.
+
 Para usar essa ferramenta, clique em ![](/images/aerial_perspective.png) e siga as instruções descritas lá.
 
 ### ![](/images/relief_creator.png) Criando um Sombreamento usando 2 fontes de luz
