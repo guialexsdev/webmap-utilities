@@ -51,6 +51,8 @@ Para usar essa ferramenta, clique em ![](/images/aerial_perspective.png) e siga 
 
 Esse algoritmo combina duas camadas de Hillshade, criadas com duas fontes luminosas e diferentes configurações de brilho e contraste, para gerar um sombreamento mais detalhado e ainda assim mais agradável visualmente. O efeito Perspectiva Aérea é automaticamente aplicado.
 
+**Importante: como resultado, duas camadas raster são criadas. É importante que a camada que contém o nome "TOP" esteja por cima da que contém o nome "BOTTOM". Se eles não estiverem assim, ordene-as manualmente.**
+
 Para executar esse algoritmo, clique em ![](/images/relief_creator.png) e siga as instruções descritas lá.
 
 ### Outras funcionalidades
