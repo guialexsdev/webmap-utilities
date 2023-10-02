@@ -10,6 +10,10 @@ Here is a list of features:
 - Set the visibility of your layers or group of layers using zoom levels instead of scales.
 - Change scale using a zoom level selector.
 
+## QGis Plugin Repository
+
+https://plugins.qgis.org/plugins/webmap_utilities/
+
 ## Requirements and dependencies
 
 - Minimum QGis version: 3.28 (LTR)
