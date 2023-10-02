@@ -48,13 +48,13 @@ To run this algorithm, click ![](/images/grid_visualization.png) and follow the 
 
 This algorithm applies the Aerial Perspective effect to a hillshade. This effect consists in reducing the contrast of a hillshade in lower regions and increasing it in higher regions. The result is more pleasant hillshade layer.
 
-**Important: This algorithm creates 2 layers that need to be in a specific order. If the layers have not been created in the correct order, order them manually.**
-
 To use this algorithm, click ![](/images/aerial_perspective.png) and follow the instructions described there.
 
 ### ![](/images/relief_creator.png) Creating a Shaded Relief with two light sources
 
-This algorithm combines two hillshades, created with two different light sources and with different brightness and contrast settings, to generate a Shaded Relief visually light and with good level of detail. The Aerial Perspective effect is automatically applied. 
+This algorithm combines two hillshades, created with two different light sources and with different brightness and contrast settings, to generate a Shaded Relief visually light and with good level of detail. The Aerial Perspective effect is automatically applied.
+
+Important: This algorithm creates 2 layers that need to be in a specific order. If the layers have not been created in the correct order, order them manually.
 
 To use this algorithm, click ![](/images/relief_creator.png) and follow the instructions described there.
 
