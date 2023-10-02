@@ -26,7 +26,7 @@ You can get access to the plugin's tools by just right-clicking anywhere in icon
 
 ### ![](/images/cluster_view.png) Controlling visibility of features using clusters
 
-Suppose you have a vector layer containing cities in South America. It would not be interesting to show all cities at all zoom levels (scales), as it would leave the map confused and with many labels and icons overlapping. 
+Suppose you have a vector layer containing cities of South America. It would not be interesting to show all cities at all zoom levels (scales), as it would leave the map confused and with many labels and icons overlapping. 
 
 The **Clustered Visualization** algorithm solves this problem by grouping nearby cities (and thus creating clusters) and making visible only the most populous city in each group, using an attribute called **population** for example. This cities clusterization is done by distance: you can define, for example, that the groups are formed by cities whose distances to each other are 20km maximum. 
 
