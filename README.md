@@ -46,7 +46,7 @@ To run this algorithm, click ![](/images/grid_visualization.png) and follow the 
 
 ### ![](/images/aerial_perspective.png) Applying Aerial Perspective to a Hillshade
 
-This algorithm applies the Aerial Perspective effect to a hillshade. This effect consists in reducing the constraint of shading in lower regions and increasing it in higher regions. The result is more controlled and less overloaded contrast shading.
+This algorithm applies the Aerial Perspective effect to a hillshade. This effect consists in reducing the contrast of a hillshade in lower regions and increasing it in higher regions. The result is more pleasant hillshade layer.
 
 To use this algorithm, click ![](/images/aerial_perspective.png) and follow the instructions described there.
 
