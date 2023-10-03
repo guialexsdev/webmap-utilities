@@ -50,6 +50,13 @@ This algorithm applies the Aerial Perspective effect to a hillshade. This effect
 
 The two main parameters, Minimum Contrast and Maximum Contrast, control contrast intensity: positive values increase contrast, negative values decrease contrast. Basically, the greater the difference between these two values, the greater the effect of aerial perspective. You must test different values to get the best result. As a general recommendation, the minimum contrast should be kept below 0 and the maximum contrast above 0. Test the following ranges, for example:
 
+- Min: -100 Max: 0
+- Min: -50 Max: 0
+- Min: -20 Max: 20
+
+
+![Comparation between original hillshade and a hillshade with aerial perspective effect applied](/images/ap_comparation.png)
+
 To use this algorithm, click ![](/images/aerial_perspective.png) and follow the instructions described there.
 
 ### ![](/images/relief_creator.png) Creating a Shaded Relief with two light sources
@@ -59,6 +66,9 @@ This algorithm combines two hillshades, created with two different light sources
 The **Aerial Perspective Intensity** parameter should be between 40 - 100 for best results.
 
 Important: This algorithm creates 2 layers that need to be in a specific order. If the layers have not been created in the correct order, order them manually.
+
+
+![](/images/shaded_relief_creator_comp.png)
 
 To use this algorithm, click ![](/images/relief_creator.png) and follow the instructions described there.
 
